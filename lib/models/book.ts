@@ -6,6 +6,8 @@ export interface Book {
   author: string;
   fullname: string;
   category: string;
+  book_type: string; // Book type field from the book table
+  book_type_description?: string; // Description from Common table
   authorcode: string;
   claimnum: string;
   copynum: string;
@@ -28,6 +30,7 @@ export interface BookInput {
   author: string;
   fullname: string;
   category: string;
+  book_type: string; // Book type field from the book table
   authorcode: string;
   claimnum: string;
   copynum: string;

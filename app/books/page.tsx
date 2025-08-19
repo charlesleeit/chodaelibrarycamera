@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Image from 'next/image';
 
-type SortField = 'barcode' | 'name' | 'author' | 'category' | 'isbn' | 'publishyear' | 'authorcode' | 'id' | 'status';
+type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publishyear' | 'authorcode' | 'id' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 // BookInfoModal: 외부 API로 책 정보 fetch 후 모달로 표시
@@ -89,6 +89,7 @@ export default function Books() {
   const [books, setBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [categories, setCategories] = useState<{ code: string, description: string }[]>([]);
+  const [bookTypes, setBookTypes] = useState<{ code: string, description: string }[]>([]);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -136,6 +137,26 @@ export default function Books() {
       });
   }, []);
 
+  // Book types 데이터 가져오기
+  useEffect(() => {
+    fetch('/api/booktype')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch book types');
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Loaded book types:', data);
+        setBookTypes(data);
+      })
+      .catch(error => {
+        console.error('Error loading book types:', error);
+        setError('Failed to load book types');
+        setBookTypes([]);
+      });
+  }, []);
+
   const filterAndSortBooks = useCallback(() => {
     if (!Array.isArray(books)) {
       setFilteredBooks([]);
@@ -158,7 +179,7 @@ export default function Books() {
     result.sort((a, b) => a.id - b.id);
 
     // Apply sorting (if not sorting by id)
-    if (sortField !== 'barcode' && sortField !== 'name' && sortField !== 'author' && sortField !== 'category' && sortField !== 'isbn' && sortField !== 'publishyear' && sortField !== 'authorcode' && sortField !== 'id' && sortField !== 'status') {
+    if (sortField !== 'barcode' && sortField !== 'name' && sortField !== 'author' && sortField !== 'category' && sortField !== 'book_type' && sortField !== 'isbn' && sortField !== 'publishyear' && sortField !== 'authorcode' && sortField !== 'id' && sortField !== 'status') {
       // do nothing
     } else {
       result.sort((a, b) => {
@@ -302,6 +323,12 @@ export default function Books() {
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Category</th>
                   <th
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('book_type')}
+                  >
+                    Book Type {sortField === 'book_type' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('category')}
                   >
                     Old Category {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -354,6 +381,20 @@ export default function Books() {
                             <span className="font-medium">{book.category}</span>
                             {categories.find(cat => cat.code === book.category)?.description && (
                               <span className="text-gray-600 ml-1">- {categories.find(cat => cat.code === book.category)?.description}</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-2 text-sm">
+                      <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.book_type} - ${bookTypes.find(type => type.code === book.book_type)?.description || ''}`}>
+                        {book.book_type ? (
+                          <>
+                            <span className="font-medium">{book.book_type}</span>
+                            {bookTypes.find(type => type.code === book.book_type)?.description && (
+                              <span className="text-gray-600 ml-1">- {bookTypes.find(type => type.code === book.book_type)?.description}</span>
                             )}
                           </>
                         ) : (

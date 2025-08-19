@@ -37,7 +37,17 @@ export async function PUT(
     const { id } = await params;
     const bookId = parseInt(id);
     const book: BookInput = await request.json();
+    
+    console.log('PUT /api/bookcrud/[id] - Received data:', {
+      bookId,
+      bookData: book,
+      bookType: book.book_type,
+      bookTypeType: typeof book.book_type
+    });
+    
     const updatedBook = await updateBook(bookId, book);
+    
+    console.log('PUT /api/bookcrud/[id] - Update result:', updatedBook);
     
     if (!updatedBook) {
       return NextResponse.json(
@@ -48,6 +58,7 @@ export async function PUT(
     
     return NextResponse.json(updatedBook);
   } catch (_error: any) {
+    console.error('PUT /api/bookcrud/[id] - Error:', _error);
     return NextResponse.json(
       { error: _error.message || 'Failed to update book' },
       { status: 500 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Book } from '@/lib/models/book';
 import { FaEdit, FaTrash, FaTimes, FaSave, FaBook } from 'react-icons/fa';
 
-type SortField = 'barcode' | 'name' | 'author' | 'category' | 'isbn' | 'publishyear' | 'authorcode';
+type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publishyear' | 'authorcode';
 type SortOrder = 'asc' | 'desc';
 
 export default function Books() {
@@ -12,11 +12,13 @@ export default function Books() {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [categories, setCategories] = useState<{ code: string, description: string }[]>([]);
+  const [bookTypes, setBookTypes] = useState<{ code: string, description: string }[]>([]);
   const [formData, setFormData] = useState<Partial<Book>>({
     barcode: '',
     name: '',
     author: '',
     category: '',
+    book_type: '',
     oldcategory: '',
     authorcode: '',
     isbn: '',
@@ -115,6 +117,26 @@ export default function Books() {
       });
   }, []);
 
+  // Book types 데이터 가져오기
+  useEffect(() => {
+    fetch('/api/booktype')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch book types');
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Loaded book types:', data);
+        setBookTypes(data);
+      })
+      .catch(error => {
+        console.error('Error loading book types:', error);
+        setError('Failed to load book types');
+        setBookTypes([]);
+      });
+  }, []);
+
   const fetchBooks = async () => {
     setLoading(true);
     try {
@@ -155,6 +177,10 @@ export default function Books() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    console.log('Form submission - formData:', formData);
+    console.log('Form submission - book_type value:', formData.book_type);
+    
     try {
       const url = selectedBook 
         ? `/api/bookcrud/${selectedBook.id}`
@@ -179,6 +205,7 @@ export default function Books() {
         name: '',
         author: '',
         category: '',
+        book_type: '',
         oldcategory: '',
         authorcode: '',
         isbn: '',
@@ -307,7 +334,6 @@ export default function Books() {
                   value={formData.author}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
                 />
               </div>
               <div>
@@ -347,6 +373,32 @@ export default function Books() {
                 </select>
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700">Book Type</label>
+                <select
+                  name="book_type"
+                  value={formData.book_type?.toString().trim() || ''}
+                  onChange={(e) => {
+                    console.log('Book Type selection changed:', {
+                      selectedValue: e.target.value,
+                      selectedOption: e.target.options[e.target.selectedIndex]?.text,
+                      currentFormData: formData.book_type
+                    });
+                    handleInputChange(e);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">Select Book Type</option>
+                  {bookTypes.map(type => (
+                    <option 
+                      key={type.code} 
+                      value={type.code}
+                    >
+                      {type.code} - {type.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Old Category</label>
                 <input
                   type="text"
@@ -354,7 +406,6 @@ export default function Books() {
                   value={formData.oldcategory}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
                 />
               </div>
               <div>
@@ -365,7 +416,6 @@ export default function Books() {
                   value={formData.authorcode}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
                 />
               </div>
               <div>
@@ -376,7 +426,6 @@ export default function Books() {
                   value={formData.isbn}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
                 />
               </div>
               <div>
@@ -387,7 +436,6 @@ export default function Books() {
                   value={formData.publishyear}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
                 />
               </div>
             </div>
@@ -412,10 +460,9 @@ export default function Books() {
                       name: '',
                       author: '',
                       category: '',
+                      book_type: '',
                       oldcategory: '',
                       authorcode: '',
-                      isbn: '',
-                      publishyear: '',
                       status: 0
                     });
                   }}
@@ -482,6 +529,7 @@ export default function Books() {
                   >
                     Category {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
+                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Book Type</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Old Category</th>
                   <th 
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
@@ -523,6 +571,20 @@ export default function Books() {
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[200px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.category} - ${categories.find(cat => cat.code === book.category)?.description || ''}`}>
                         {book.category} - {categories.find(cat => cat.code === book.category)?.description || ''}
+                      </div>
+                    </td>
+                    <td className="px-2 py-2 text-sm">
+                      <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.book_type} - ${bookTypes.find(type => type.code === book.book_type)?.description || ''}`}>
+                        {book.book_type ? (
+                          <>
+                            <span className="font-medium">{book.book_type}</span>
+                            {bookTypes.find(type => type.code === book.book_type)?.description && (
+                              <span className="text-gray-600 ml-1">- {bookTypes.find(type => type.code === book.book_type)?.description}</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-2 py-2 text-sm">
