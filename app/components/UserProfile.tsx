@@ -1,6 +1,6 @@
 'use client';
 
-import { FaUserCircle, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaSignInAlt, FaUserPlus, FaPowerOff } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -29,7 +29,7 @@ export default function UserProfile() {
             title="Logout" 
             className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
           >
-            <FaSignOutAlt className="text-lg" />
+            <FaPowerOff className="text-lg" />
           </button>
         </>
       ) : (
@@ -39,7 +39,7 @@ export default function UserProfile() {
           title="Login" 
           className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
         >
-          <FaSignInAlt className="text-lg" />
+          <FaUserPlus className="text-lg" />
         </button>
       )}
     </div>
