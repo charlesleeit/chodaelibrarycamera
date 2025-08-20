@@ -260,7 +260,7 @@ export default function LoanStatusPage() {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="이름, 도서명 또는 BARCODE 검색..."
+          placeholder="교인명, 도서명 또는 BARCODE 검색..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full p-2 border rounded"

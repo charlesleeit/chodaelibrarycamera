@@ -34,7 +34,7 @@ const Navigation = () => {
       icon: FaFileAlt,
       children: [
         { name: '대출 현황', path: '/loanstatus' },
-        { name: '반납 현황', path: '/reports/return' },
+        { name: '대출 현황 II', path: '/reports/return' },
       ],
       requiresAuth: true, // 로그인 필요 표시
     },
