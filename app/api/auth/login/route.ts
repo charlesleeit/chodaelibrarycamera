@@ -23,9 +23,9 @@ export async function POST(request: Request) {
 
     // Query the users table
     const result = await sql.query`
-      SELECT id, name, pwd
-      FROM [Library].[dbo].[users]
-      WHERE status = true and id = ${id} AND pwd = ${password}
+      select id, name, pwd
+        from [Library].[dbo].[users]
+       where status = 1 and id = ${id} AND pwd = ${password}
     `;
 
     // Check if user exists and password matches

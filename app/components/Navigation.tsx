@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-//import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { FaHome, FaBook, FaExchangeAlt, FaUsers, FaBookDead, FaFileAlt, FaChevronDown } from 'react-icons/fa';
 import { useState } from 'react';
 
 const Navigation = () => {
   const pathname = usePathname();
- // const _router = useRouter();
- // const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
 
   const handleMenuClick = (path: string, _e: React.MouseEvent) => {
@@ -18,10 +17,10 @@ const Navigation = () => {
     if (path === '/' || path === '/takeout' || path === '/return' || path === '/books') return;
     
     // Redirect to login if not logged in
-    // if (!isLoggedIn) {
-    //   e.preventDefault();
-    //   router.push('/login');
-    // }
+    if (!isLoggedIn) {
+      // e.preventDefault();
+      // router.push('/login');
+    }
   };
 
   const menuItems = [
@@ -37,8 +36,9 @@ const Navigation = () => {
         { name: '대출 현황', path: '/loanstatus' },
         { name: '반납 현황', path: '/reports/return' },
       ],
+      requiresAuth: true, // 로그인 필요 표시
     },
-    { name: 'Users', path: '/users', icon: FaUsers },
+    { name: 'Users', path: '/users', icon: FaUsers, requiresAuth: true }, // Users도 로그인 필요
   ];
 
   return (
@@ -59,6 +59,12 @@ const Navigation = () => {
           <ul className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              
+              // 로그인이 필요한 메뉴이고 로그인되지 않은 경우 건너뛰기
+              if (item.requiresAuth && !isLoggedIn) {
+                return null;
+              }
+              
               if (item.children) {
                 return (
                   <li key={item.path}>

@@ -15,7 +15,7 @@ const sqlConfig = {
   password: process.env.DB_PASSWORD || 'your_password',
   database: process.env.DB_NAME || 'Library',
   server: process.env.DB_SERVER || 'localhost',
-  port: parseInt(process.env.DB_PORT || '1375'),
+  port: parseInt(process.env.DB_PORT || '1433'),
   pool: {
     max: 10,
     min: 0,
