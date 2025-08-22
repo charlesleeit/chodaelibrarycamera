@@ -27,15 +27,15 @@ export async function GET(request: Request) {
     pool = await sql.connect(config);
     
     const query = `
-      SELECT [id] as person_id, membername as person_name, COUNT(*) as books
+      SELECT [id] as person_id, membername as person_name, mobilenum, email, COUNT(*) as books
       FROM (
-        SELECT DISTINCT A.[bookid], B.barcode, B.name, C.[id], C.name as membername
+        SELECT DISTINCT A.[bookid], B.barcode, B.name, C.[id], C.name as membername, C.mobilenum, C.email
         FROM [Library].[dbo].[OutIn] A 
         INNER JOIN [dbo].[Book] B ON A.bookid = B.id
         INNER JOIN [dbo].[vwPeople] C ON A.id = C.id
         WHERE A.opendate BETWEEN @startDate AND @endDate
       ) Z
-      GROUP BY [id], membername
+      GROUP BY [id], membername, mobilenum, email
       ORDER BY COUNT(*) DESC, membername
     `;
     

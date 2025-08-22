@@ -44,6 +44,7 @@ export async function GET(request: Request) {
       .input('endDate', sql.VarChar, endDate)
       .query(query);
     
+    // value 필드로 감싸지 않고 직접 배열 반환
     return NextResponse.json(result.recordset);
   } catch (error) {
     console.error('Error in loanstats/books API:', error);

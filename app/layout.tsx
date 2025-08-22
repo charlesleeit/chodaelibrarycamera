@@ -74,9 +74,9 @@ export default function RootLayout({
         <AuthProvider>
           <div className="flex min-h-screen">
             <Navigation />
-            <div className="flex-1 ml-64 relative">
+            <div className="flex-1 md:ml-64 relative">
               <UserProfile />
-              <main className="px-4 sm:px-6 lg:px-8 py-8">
+              <main className="px-4 sm:px-6 lg:px-8 py-8 mt-16 md:mt-0">
                 {children}
               </main>
             </div>

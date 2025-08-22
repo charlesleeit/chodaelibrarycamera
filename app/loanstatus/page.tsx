@@ -304,15 +304,15 @@ export default function LoanStatusPage() {
                   }
                   return (
                     <tr key={`${loan.id}-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                              <td className="px-2 py-2 whitespace-nowrap text-sm">{indexOfFirstItem + index + 1}</td>
-                        <td className="px-2 py-2 text-sm">{loan.id}</td>
-                        <td className="px-2 py-2 text-sm max-w-[120px] truncate" title={loan.person_name}>{loan.person_name}</td>
-                        <td className="px-2 py-2 text-sm">{loan.barcode}</td>
-                        <td className="px-2 py-2 text-sm max-w-[220px] truncate" title={loan.book_name}>{loan.book_name}</td>
-                        <td className="px-2 py-2 text-sm max-w-[150px] truncate" title={loan.author || ''}>{loan.author || '-'}</td>
-                        <td className="px-2 py-2 text-sm">{loan.outdate ? new Date(loan.outdate).toLocaleDateString() : ''}</td>
-                        <td className="px-2 py-2 text-sm">{loan.closedate ? new Date(loan.closedate).toLocaleDateString() : ''}</td>
-                        <td className="px-2 py-2 text-sm">{loanDays}</td>
+                      <td className="px-2 py-2 whitespace-nowrap text-sm">{indexOfFirstItem + index + 1}</td>
+                      <td className="px-2 py-2 text-sm">{loan.id}</td>
+                      <td className="px-2 py-2 text-sm max-w-[120px] truncate" title={loan.person_name}>{loan.person_name}</td>
+                      <td className="px-2 py-2 text-sm">{loan.barcode}</td>
+                      <td className="px-2 py-2 text-sm max-w-[220px] truncate" title={loan.book_name}>{loan.book_name}</td>
+                      <td className="px-2 py-2 text-sm max-w-[150px] truncate" title={loan.author}>{loan.author}</td>
+                      <td className="px-2 py-2 text-sm">{loan.outdate ? new Date(loan.outdate).toLocaleDateString() : ''}</td>
+                      <td className="px-2 py-2 text-sm">{loan.closedate ? new Date(loan.closedate).toLocaleDateString() : ''}</td>
+                      <td className="px-2 py-2 text-sm">{loanDays}</td>
                     </tr>
                   );
                 })}

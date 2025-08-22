@@ -479,11 +479,11 @@ export default function TakeoutPage() {
             <h3 className="text-sm font-semibold text-blue-800 mb-2">Current User Info</h3>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-blue-600 font-medium">Member ID:</span>
+                <span className="text-blue-600 font-medium">Member ID : </span>
                 <span className="text-gray-800">{id || 'Not verified'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-blue-600 font-medium">Phone:</span>
+                <span className="text-blue-600 font-medium">Phone : </span>
                 <span className="text-gray-800">{phoneNo || 'Not verified'}</span>
               </div>
             </div>

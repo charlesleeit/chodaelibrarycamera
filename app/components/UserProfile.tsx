@@ -18,12 +18,12 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="absolute top-4 right-8 flex items-center space-x-3 z-50">
+    <div className="absolute top-4 right-8 md:right-8 flex items-center space-x-3 z-40">
       {isLoggedIn && userName ? (
         // 로그인된 경우: 사용자명과 로그아웃 아이콘
         <>
           <FaUserCircle className="text-2xl text-gray-500" />
-          <span className="font-semibold text-gray-700">{userName}</span>
+          <span className="font-semibold text-gray-700 hidden sm:inline">{userName}</span>
           <button 
             onClick={handleLogout} 
             title="Logout" 
