@@ -1,92 +1,194 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBookById, updateBook, deleteBook } from '@/lib/services/bookService';
-import { BookInput } from '@/lib/models/book';
+import sql from 'mssql';
 
-export const dynamic = 'force-dynamic';
+const config = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER || '',
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
+  options: { encrypt: true, trustServerCertificate: true },
+};
 
+// GET: 특정 책 정보 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
+  const id = params.id;
+  
+  let pool;
   try {
-    const { id } = await params;
-    const bookId = parseInt(id);
-    const book = await getBookById(bookId);
+    pool = await sql.connect(config);
     
-    if (!book) {
+    const query = `
+      SELECT id, barcode, name, author, category
+      FROM [Book]
+      WHERE id = @id
+    `;
+    
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(query);
+    
+    if (result.recordset.length === 0) {
       return NextResponse.json(
         { error: 'Book not found' },
         { status: 404 }
       );
     }
     
-    return NextResponse.json(book);
-  } catch (_error: any) {
+    return NextResponse.json({
+      success: true,
+      book: result.recordset[0]
+    });
+  } catch (error) {
+    console.error('Error fetching book:', error);
     return NextResponse.json(
-      { error: _error.message || 'Failed to fetch book' },
+      { error: String(error) },
       { status: 500 }
     );
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (error) {
+        console.error('Error closing SQL connection:', error);
+      }
+    }
   }
 }
 
+// PUT: 책 정보 업데이트 (카테고리 등)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
+  const id = params.id;
+  const body = await request.json();
+  
+  let pool;
   try {
-    const { id } = await params;
-    const bookId = parseInt(id);
-    const book: BookInput = await request.json();
+    pool = await sql.connect(config);
     
-    console.log('PUT /api/bookcrud/[id] - Received data:', {
-      bookId,
-      bookData: book,
-      bookType: book.book_type,
-      bookTypeType: typeof book.book_type
-    });
+    // 업데이트할 필드들을 동적으로 구성
+    const updateFields: string[] = [];
+    const inputs: any = {};
     
-    const updatedBook = await updateBook(bookId, book);
+    if (body.category !== undefined) {
+      updateFields.push('category = @category');
+      inputs.category = body.category;
+    }
     
-    console.log('PUT /api/bookcrud/[id] - Update result:', updatedBook);
+    if (body.name !== undefined) {
+      updateFields.push('name = @name');
+      inputs.name = body.name;
+    }
     
-    if (!updatedBook) {
+    if (body.author !== undefined) {
+      updateFields.push('author = @author');
+      inputs.author = body.author;
+    }
+    
+    if (updateFields.length === 0) {
       return NextResponse.json(
-        { error: 'Book not found' },
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
+    }
+    
+    const query = `
+      UPDATE [Book]
+      SET ${updateFields.join(', ')}
+      WHERE id = @id
+    `;
+    
+    const request = pool.request().input('id', sql.Int, id);
+    
+    if (inputs.category !== undefined) {
+      request.input('category', sql.NVarChar, inputs.category);
+    }
+    if (inputs.name !== undefined) {
+      request.input('name', sql.NVarChar, inputs.name);
+    }
+    if (inputs.author !== undefined) {
+      request.input('author', sql.NVarChar, inputs.author);
+    }
+    
+    const result = await request.query(query);
+    
+    if (result.rowsAffected[0] === 0) {
+      return NextResponse.json(
+        { error: 'Book not found or no changes made' },
         { status: 404 }
       );
     }
     
-    return NextResponse.json(updatedBook);
-  } catch (_error: any) {
-    console.error('PUT /api/bookcrud/[id] - Error:', _error);
+    return NextResponse.json({
+      success: true,
+      message: 'Book updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating book:', error);
     return NextResponse.json(
-      { error: _error.message || 'Failed to update book' },
+      { error: String(error) },
       { status: 500 }
     );
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (error) {
+        console.error('Error closing SQL connection:', error);
+      }
+    }
   }
 }
 
+// DELETE: 책 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
+  const id = params.id;
+  
+  let pool;
   try {
-    const { id } = await params;
-    const bookId = parseInt(id);
-    const success = await deleteBook(bookId);
+    pool = await sql.connect(config);
     
-    if (!success) {
+    const query = `
+      DELETE FROM [Book]
+      WHERE id = @id
+    `;
+    
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(query);
+    
+    if (result.rowsAffected[0] === 0) {
       return NextResponse.json(
         { error: 'Book not found' },
         { status: 404 }
       );
     }
     
-    return NextResponse.json({ success: true });
-  } catch (_error: any) {
+    return NextResponse.json({
+      success: true,
+      message: 'Book deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting book:', error);
     return NextResponse.json(
-      { error: _error.message || 'Failed to delete book' },
+      { error: String(error) },
       { status: 500 }
     );
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (error) {
+        console.error('Error closing SQL connection:', error);
+      }
+    }
   }
 } 

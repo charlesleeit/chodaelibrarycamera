@@ -35,6 +35,7 @@ const Navigation = () => {
       children: [
         { name: '대출 현황', path: '/loanstatus' },
         { name: '대출 현황 II', path: '/reports/return' },
+        { name: 'CATEGORY UPDATE', path: '/reports/category-update' },
       ],
       requiresAuth: true, // 로그인 필요 표시
     },

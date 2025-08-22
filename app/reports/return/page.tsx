@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { FaBook, FaUser, FaTrophy, FaChevronLeft, FaChevronRight, FaCalendarAlt } from 'react-icons/fa';
+import { FaBook, FaUser, FaTrophy, FaChevronLeft, FaChevronRight, FaCalendarAlt, FaFileAlt, FaEyeSlash } from 'react-icons/fa';
+import PrintReport from '../../components/PrintReport';
 
 interface BookStats {
   bookid: number;
   barcode: string;
   book_name: string;
+  author?: string;
   persons: number;
 }
 
@@ -31,6 +33,8 @@ export default function LoanStatusIIPage() {
   
   const [itemsPerPage] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isReportView, setIsReportView] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   // 컴포넌트 마운트 시 기본 날짜 설정 (오늘 기준 6개월 전부터)
   useEffect(() => {
@@ -99,6 +103,11 @@ export default function LoanStatusIIPage() {
     setCurrentPage(page);
   };
 
+  // 페이지 변경 시 currentPage를 1로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     if (totalPages <= 7) {
@@ -135,13 +144,13 @@ export default function LoanStatusIIPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">대출 현황 II - TOP 리스트 📊</h1>
-      </div>
+             <div className="mb-4">
+         <h1 className="text-2xl font-bold text-gray-800">대출 현황 II - TOP 리스트 📊</h1>
+       </div>
 
       {/* 날짜 입력 옵션 */}
       <div className="mb-4 flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">대출 기간 :</label>
+        <label className="text-sm font-medium text-gray-700">PERIOD :</label>
         <div className="flex items-center space-x-2">
           <div className="relative">
             <input
@@ -165,17 +174,28 @@ export default function LoanStatusIIPage() {
             <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
         </div>
-        <button
-          onClick={handleDateChange}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          조회
-        </button>
+                 <button
+           onClick={handleDateChange}
+           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors h-10"
+         >
+           조회
+         </button>
+                   <button
+            onClick={() => setIsReportView(!isReportView)}
+            className={`px-4 py-2 rounded-md transition-colors flex items-center justify-center h-10 ml-auto ${
+              isReportView 
+                ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+            title={isReportView ? '일반 보기' : '리포트 보기'}
+          >
+            {isReportView ? <FaEyeSlash /> : <FaFileAlt />}
+          </button>
       </div>
 
       {/* 탭 네비게이션 */}
       <div className="mb-4 flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">통계 유형 : </label>
+        <label className="text-sm font-medium text-gray-700">TYPE : </label>
         <div className="flex space-x-4">
           <label className="inline-flex items-center space-x-1 cursor-pointer">
             <input
@@ -212,18 +232,18 @@ export default function LoanStatusIIPage() {
           <div className="text-sm text-green-600 font-medium">TOP Members</div>
           <div className="text-2xl font-bold text-green-800">{personStats.length}</div>
         </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <div className="text-sm text-orange-600 font-medium">시작일</div>
-          <div className="text-lg font-bold text-orange-800">
-            {startDate ? new Date(startDate).toLocaleDateString('ko-KR') : '-'}
-          </div>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-          <div className="text-sm text-purple-600 font-medium">종료일</div>
-          <div className="text-lg font-bold text-purple-800">
-            {endDate ? new Date(endDate).toLocaleDateString('ko-KR') : '-'}
-          </div>
-        </div>
+                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+           <div className="text-sm text-orange-600 font-medium">시작일</div>
+           <div className="text-lg font-bold text-orange-800">
+             {startDate ? new Date(startDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '-'}
+           </div>
+         </div>
+         <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+           <div className="text-sm text-purple-600 font-medium">종료일</div>
+           <div className="text-lg font-bold text-purple-800">
+             {endDate ? new Date(endDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '-'}
+           </div>
+         </div>
       </div>
 
       {error && (
@@ -236,17 +256,18 @@ export default function LoanStatusIIPage() {
         <div className="p-4 text-center">Loading...</div>
       ) : (
         <>
-          <div className="max-h-[600px] overflow-auto">
+          <div ref={printRef} className="max-h-[600px] overflow-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-600 sticky top-0 z-10">
-                {activeTab === 'books' ? (
-                  <tr>
-                    <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">No.</th>
-                    <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">순위</th>
-                    <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">도서명</th>
-                    <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">BARCODE</th>
-                    <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">빌린 사람 수</th>
-                  </tr>
+                                 {activeTab === 'books' ? (
+                   <tr>
+                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">No.</th>
+                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">순위</th>
+                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">도서명</th>
+                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">저자</th>
+                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">BARCODE</th>
+                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">빌린 사람 수</th>
+                   </tr>
                 ) : (
                   <tr>
                     <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">No.</th>
@@ -274,8 +295,9 @@ export default function LoanStatusIIPage() {
                             <span className="text-gray-600">{indexOfFirstItem + index + 1}</span>
                           )}
                         </td>
-                        <td className="px-2 py-2 text-sm font-medium text-gray-900 max-w-[300px] truncate" title={book.book_name}>{book.book_name}</td>
-                        <td className="px-2 py-2 text-sm font-mono">{book.barcode}</td>
+                                                 <td className="px-2 py-2 text-sm font-medium text-gray-900 max-w-[300px] truncate" title={book.book_name}>{book.book_name}</td>
+                         <td className="px-2 py-2 text-sm max-w-[150px] truncate" title={book.author || ''}>{book.author || '-'}</td>
+                         <td className="px-2 py-2 text-sm font-mono">{book.barcode}</td>
                         <td className="px-2 py-2 text-sm font-bold text-blue-600">{book.persons.toLocaleString()}명</td>
                       </tr>
                     );
@@ -344,6 +366,32 @@ export default function LoanStatusIIPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Report View Overlay */}
+      {isReportView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-4xl max-h-[90vh] overflow-y-auto">
+                         <div className="flex justify-end items-center mb-6">
+               <button
+                 onClick={() => setIsReportView(false)}
+                 className="text-gray-500 hover:text-gray-700 text-2xl"
+               >
+                 ×
+               </button>
+             </div>
+            
+            <PrintReport
+              reportType={activeTab}
+              topBooks={bookStats}
+              topPeople={personStats}
+              startDate={startDate}
+              endDate={endDate}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

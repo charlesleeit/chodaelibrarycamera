@@ -17,6 +17,7 @@
     "@types/mssql": "^9.1.7",
     "mssql": "^11.0.1",
     "next": "^14.2.3",
+    "quagga": "^0.12.1",
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^5.5.0"

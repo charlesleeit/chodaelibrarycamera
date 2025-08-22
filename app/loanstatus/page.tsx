@@ -109,6 +109,8 @@ export default function LoanStatusPage() {
     setCurrentPage(page);
   };
 
+
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     if (totalPages <= 7) {
@@ -150,7 +152,7 @@ export default function LoanStatusPage() {
       </div>
       {/* CONDITION 옵션 */}
       <div className="mb-2 flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">대출 상태 : </label>
+        <label className="text-sm font-medium text-gray-700">TYPE : </label>
         {CONDITION_OPTIONS.map(opt => (
           <label key={opt.value} className="inline-flex items-center space-x-1 cursor-pointer">
             <input
@@ -169,7 +171,7 @@ export default function LoanStatusPage() {
       {/* 대출기간 필터 */}
       <div className="mb-4 flex items-center space-x-4">
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">대출 기간 : </label>
+          <label className="text-sm font-medium text-gray-700">PERIOD : </label>
           <input
             type="date"
             value={startDate}
@@ -278,9 +280,9 @@ export default function LoanStatusPage() {
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">No.</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">교인 ID</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">교인명</th>
-                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">도서ID</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">BARCODE</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">도서명</th>
+                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">저자</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">대출일자</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">반납일</th>
                   <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">대출기간(일)</th>
@@ -302,15 +304,15 @@ export default function LoanStatusPage() {
                   }
                   return (
                     <tr key={`${loan.id}-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-2 py-2 whitespace-nowrap text-sm">{indexOfFirstItem + index + 1}</td>
-                      <td className="px-2 py-2 text-sm">{loan.id}</td>
-                      <td className="px-2 py-2 text-sm max-w-[120px] truncate" title={loan.person_name}>{loan.person_name}</td>
-                      <td className="px-2 py-2 text-sm">{loan.bookid}</td>
-                      <td className="px-2 py-2 text-sm">{loan.barcode}</td>
-                      <td className="px-2 py-2 text-sm max-w-[220px] truncate" title={loan.book_name}>{loan.book_name}</td>
-                      <td className="px-2 py-2 text-sm">{loan.outdate ? new Date(loan.outdate).toLocaleDateString() : ''}</td>
-                      <td className="px-2 py-2 text-sm">{loan.closedate ? new Date(loan.closedate).toLocaleDateString() : ''}</td>
-                      <td className="px-2 py-2 text-sm">{loanDays}</td>
+                                              <td className="px-2 py-2 whitespace-nowrap text-sm">{indexOfFirstItem + index + 1}</td>
+                        <td className="px-2 py-2 text-sm">{loan.id}</td>
+                        <td className="px-2 py-2 text-sm max-w-[120px] truncate" title={loan.person_name}>{loan.person_name}</td>
+                        <td className="px-2 py-2 text-sm">{loan.barcode}</td>
+                        <td className="px-2 py-2 text-sm max-w-[220px] truncate" title={loan.book_name}>{loan.book_name}</td>
+                        <td className="px-2 py-2 text-sm max-w-[150px] truncate" title={loan.author || ''}>{loan.author || '-'}</td>
+                        <td className="px-2 py-2 text-sm">{loan.outdate ? new Date(loan.outdate).toLocaleDateString() : ''}</td>
+                        <td className="px-2 py-2 text-sm">{loan.closedate ? new Date(loan.closedate).toLocaleDateString() : ''}</td>
+                        <td className="px-2 py-2 text-sm">{loanDays}</td>
                     </tr>
                   );
                 })}

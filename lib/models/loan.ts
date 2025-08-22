@@ -4,6 +4,7 @@ export interface LoanStatus {
   bookid: number;
   barcode: string;
   book_name: string;
+  author?: string;
   outdate: Date;
   closedate: Date | null;
 }
