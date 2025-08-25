@@ -1,36 +1,43 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { FaTrophy, FaPrint, FaFileAlt, FaEyeSlash } from 'react-icons/fa';
+import { FaTrophy, FaCalendarAlt, FaPrint, FaChartBar } from 'react-icons/fa';
 import PrintReport from '../../components/PrintReport';
 
-interface TopBook {
+interface BookStats {
   bookid: number;
   barcode: string;
   book_name: string;
+  author: string;
   persons: number;
 }
 
-interface TopPerson {
+interface PersonStats {
   person_id: number;
   person_name: string;
+  mobilenum: string;
+  email: string;
   books: number;
 }
 
 export default function TopListPage() {
   const { isLoggedIn } = useAuth();
-  const [topBooks, setTopBooks] = useState<TopBook[]>([]);
-  const [topPeople, setTopPeople] = useState<TopPerson[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [reportType, setReportType] = useState<'books' | 'people'>('books');
+  const [bookStats, setBookStats] = useState<BookStats[]>([]);
+  const [personStats, setPersonStats] = useState<PersonStats[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'books' | 'people'>('books');
+  
+  // 날짜 입력을 위한 상태
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  
+  const [itemsPerPage] = useState<number>(20);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  
+  // 리포트 보기 관련 상태 추가
   const [isReportView, setIsReportView] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
 
   // 기본 날짜 설정 (6개월 전부터 오늘까지)
   useEffect(() => {
@@ -42,6 +49,11 @@ export default function TopListPage() {
     setStartDate(sixMonthsAgo.toISOString().split('T')[0]);
   }, []);
 
+  // activeTab이 바뀔 때 currentPage를 1로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const fetchData = async () => {
     if (!startDate || !endDate) return;
     
@@ -49,136 +61,30 @@ export default function TopListPage() {
     setError('');
     
     try {
-      if (reportType === 'books') {
+      if (activeTab === 'books') {
         const response = await fetch(`/api/loanstats/books?startDate=${startDate}&endDate=${endDate}`);
         const data = await response.json();
-        if (response.ok) {
-          setTopBooks(data);
+        
+        if (data.success) {
+          setBookStats(data.data || []);
         } else {
-          setError(data.error || '데이터를 불러올 수 없습니다.');
+          setError(data.message || 'Failed to fetch book statistics');
         }
       } else {
         const response = await fetch(`/api/loanstats/people?startDate=${startDate}&endDate=${endDate}`);
         const data = await response.json();
-        if (response.ok) {
-          setTopPeople(data);
+        
+        if (data.success) {
+          setPersonStats(data.data || []);
         } else {
-          setError(data.error || '데이터를 불러올 수 없습니다.');
+          setError(data.message || 'Failed to fetch person statistics');
         }
       }
-    } catch (err) {
-      setError('데이터를 불러오는 중 오류가 발생했습니다.');
+    } catch (error) {
+      setError('Failed to fetch data');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate, reportType]);
-
-  const handlePrint = () => {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>대출 현황 II - TOP 리스트</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-              table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; color: #000; }
-              .header { text-align: center; margin-bottom: 30px; }
-              .summary { display: flex; gap: 20px; margin-bottom: 30px; }
-              .summary-card { flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 5px; text-align: center; }
-              .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>대출 현황 II - TOP 리스트</h1>
-              <p>${startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : ''}</p>
-              <p>생성일시: ${new Date().toLocaleString('ko-KR')}</p>
-            </div>
-            
-            <div class="summary">
-              <div class="summary-card">
-                <h3>TOP Books</h3>
-                <p style="font-size: 24px; font-weight: bold; color: #1e40af;">${topBooks.length}</p>
-              </div>
-              <div class="summary-card">
-                <h3>TOP Members</h3>
-                <p style="font-size: 24px; font-weight: bold; color: #059669;">${topPeople.length}</p>
-              </div>
-            </div>
-            
-            <h3>${reportType === 'books' ? 'TOP Books 상세' : 'TOP Members 상세'}</h3>
-                         ${reportType === 'books' ? `
-               <table>
-                 <thead>
-                   <tr>
-                     <th>순위</th>
-                     <th>도서명</th>
-                     <th>BARCODE</th>
-                     <th>빌린 사람 수</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   ${topBooks.map((book, index) => `
-                     <tr>
-                       <td>${index + 1}</td>
-                       <td>${book.book_name}</td>
-                       <td>${book.barcode}</td>
-                       <td>${book.persons}명</td>
-                     </tr>
-                   `).join('')}
-                 </tbody>
-               </table>
-             ` : `
-               <table>
-                 <thead>
-                   <tr>
-                     <th>순위</th>
-                     <th>교인명</th>
-                     <th>빌린 책 수</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   ${topPeople.map((person, index) => `
-                     <tr>
-                       <td>${index + 1}</td>
-                       <td>${person.person_name}</td>
-                       <td>${person.books}권</td>
-                     </tr>
-                   `).join('')}
-                 </tbody>
-               </table>
-             `}
-            
-            <div class="footer">
-              <p>이 리포트는 NJCHODAE 도서관 시스템에서 자동 생성되었습니다.</p>
-            </div>
-          </body>
-        </html>
-      `);
-      
-      printWindow.document.close();
-      printWindow.focus();
-      
-      // Wait for content to load then print
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.`;
   };
 
   const getRankIcon = (rank: number) => {
@@ -188,280 +94,248 @@ export default function TopListPage() {
     return null;
   };
 
-  // 페이지네이션 관련 함수들 (리포트용)
-  const totalPages = Math.ceil((reportType === 'books' ? topBooks.length : topPeople.length) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  
-  const currentBooks = topBooks.slice(startIndex, endIndex);
-  const currentPeople = topPeople.slice(startIndex, endIndex);
-
-  const goToPage = (page: number) => {
-    setCurrentPage(page);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
   };
-
-  const goToPreviousPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
-
-  const goToNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  };
-
-  // 페이지 변경 시 currentPage를 1로 리셋
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [reportType]);
 
   if (!isLoggedIn) {
-    return (
-      <div className="container mx-auto p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">대출 현황 II - TOP 리스트</h1>
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4 inline-block">
-          이 페이지는 로그인한 사용자만 볼 수 있습니다.
-        </div>
-        <button
-          onClick={() => window.location.href = '/login'}
-          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-        >
-          로그인 페이지로 이동
-        </button>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center">Login required.</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-2">
-          <h1 className="text-2xl font-bold text-gray-800">대출 현황 II - TOP 리스트</h1>
-          <span className="text-gray-500">📊</span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Charles Lee</span>
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+    <>
+      {/* TOP LIST 제목 */}
+      <div className="bg-white shadow-md p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <FaChartBar className="text-3xl text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-800">TOP LIST</h1>
           </div>
-        </div>
-      </div>
-
-             {/* Title with Print Button */}
-       <div className="flex justify-between items-center mb-4">
-         <h2 className="text-xl font-semibold text-gray-700">대출 현황 II</h2>
-         <button
-           onClick={handlePrint}
-           className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-           title="프린트"
-         >
-           <FaFileAlt />
-         </button>
-       </div>
-
-      {/* Control Panel */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                     {/* Date Range */}
-           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">PERIOD :</label>
-             <div className="flex items-center space-x-2">
-               <input
-                 type="date"
-                 value={startDate}
-                 onChange={(e) => setStartDate(e.target.value)}
-                 className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-               />
-               <span className="text-gray-500">~</span>
-               <input
-                 type="date"
-                 value={endDate}
-                 onChange={(e) => setEndDate(e.target.value)}
-                 className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-               />
-               <button
-                 onClick={fetchData}
-                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-               >
-                 조회
-               </button>
-             </div>
-           </div>
-
-          {/* Report Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">TYPE : </label>
-            <div className="flex space-x-4">
-              <label className="inline-flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="reportType"
-                  value="books"
-                  checked={reportType === 'books'}
-                  onChange={() => setReportType('books')}
-                  className="form-radio text-blue-600"
-                />
-                <span>TOP Books (책별 빌린 사람 수)</span>
-              </label>
-              <label className="inline-flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="reportType"
-                  value="people"
-                  checked={reportType === 'people'}
-                  onChange={() => setReportType('people')}
-                  className="form-radio text-blue-600"
-                />
-                <span>TOP Members (교인별 빌린 책 수)</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-          <div className="text-sm text-blue-600 font-medium mb-1">TOP Books</div>
-          <div className="text-3xl font-bold text-blue-800">{topBooks.length}</div>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-          <div className="text-sm text-green-600 font-medium mb-1">TOP Members</div>
-          <div className="text-3xl font-bold text-green-800">{topPeople.length}</div>
-        </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
-          <div className="text-sm text-orange-600 font-medium mb-1">시작일</div>
-          <div className="text-lg font-bold text-orange-800">{startDate ? formatDate(startDate) : '-'}</div>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
-          <div className="text-sm text-purple-600 font-medium mb-1">종료일</div>
-          <div className="text-lg font-bold text-purple-800">{endDate ? formatDate(endDate) : '-'}</div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-start items-center mb-4">
-        <div className="flex space-x-2">
           <button
-            onClick={() => setIsReportView(!isReportView)}
-            className={`px-4 py-2 rounded-md transition-colors flex items-center justify-center ${
-              isReportView 
-                ? 'bg-gray-600 text-white hover:bg-gray-700' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-            title={isReportView ? '일반 보기' : '리포트 보기'}
+            onClick={() => setIsReportView(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center space-x-2"
           >
-            {isReportView ? <FaEyeSlash /> : <FaFileAlt />}
+            <FaPrint className="text-lg" />
+            <span>Print</span>
           </button>
         </div>
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 조회 및 필터링 섹션 */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* PERIOD 섹션 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">PERIOD</label>
+              <div className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+                <span className="text-gray-500">~</span>
+                <div className="relative flex-1">
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* TYPE 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">TYPE</label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="books"
+                    checked={activeTab === 'books'}
+                    onChange={(e) => setActiveTab(e.target.value as 'books' | 'people')}
+                    className="mr-2 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">TOP Books</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="people"
+                    checked={activeTab === 'people'}
+                    onChange={(e) => setActiveTab(e.target.value as 'books' | 'people')}
+                    className="mr-2 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">TOP Members</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* 조회 버튼 */}
+          <div className="mt-6">
+            <button
+              onClick={fetchData}
+              disabled={loading || !startDate || !endDate}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Loading...' : '조회'}
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Data Table */}
-      <div ref={printRef} className="bg-white rounded-lg shadow-md overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">데이터를 불러오는 중...</div>
-        ) : (
-          <>
-                         {reportType === 'books' ? (
-               <table className="min-w-full divide-y divide-gray-200">
-                 <thead className="bg-gray-600">
-                   <tr>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">순위</th>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">도서명</th>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">BARCODE</th>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">빌린 사람 수</th>
-                   </tr>
-                 </thead>
-                                   <tbody className="bg-white divide-y divide-gray-200">
-                    {topBooks.map((book, index) => (
-                      <tr key={book.bookid} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex items-center space-x-2">
-                            <span>{index + 1}</span>
-                            {getRankIcon(index + 1)}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 max-w-md truncate" title={book.book_name}>
-                          {book.book_name}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{book.barcode}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{book.persons}명</td>
-                      </tr>
-                    ))}
-                  </tbody>
-               </table>
-                         ) : (
-               <table className="min-w-full divide-y divide-gray-200">
-                 <thead className="bg-gray-600">
-                   <tr>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">순위</th>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">교인명</th>
-                     <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">빌린 책 수</th>
-                   </tr>
-                 </thead>
-                                   <tbody className="bg-white divide-y divide-gray-200">
-                    {topPeople.map((person, index) => (
-                      <tr key={person.person_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex items-center space-x-2">
-                            <span>{index + 1}</span>
-                            {getRankIcon(index + 1)}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{person.person_name}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{person.books}권</td>
-                      </tr>
-                    ))}
-                  </tbody>
-               </table>
-             )}
-                     </>
-         )}
-       </div>
+        {/* 요약 정보 카드 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-blue-500 text-white rounded-lg p-4 text-center">
+            <h3 className="text-sm font-medium mb-1">TOP Books</h3>
+            <p className="text-2xl font-bold">{bookStats.length}</p>
+          </div>
+          <div className="bg-green-500 text-white rounded-lg p-4 text-center">
+            <h3 className="text-sm font-medium mb-1">TOP Members</h3>
+            <p className="text-2xl font-bold">{personStats.length}</p>
+          </div>
+          <div className="bg-orange-500 text-white rounded-lg p-4 text-center">
+            <h3 className="text-sm font-medium mb-1">시작일</h3>
+            <p className="text-lg font-semibold">{startDate ? formatDate(startDate) : '-'}</p>
+          </div>
+          <div className="bg-purple-500 text-white rounded-lg p-4 text-center">
+            <h3 className="text-sm font-medium mb-1">종료일</h3>
+            <p className="text-lg font-semibold">{endDate ? formatDate(endDate) : '-'}</p>
+          </div>
+        </div>
 
+        {/* 데이터 테이블 */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">NO.</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">순위</th>
+                  {activeTab === 'books' ? (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">BARCODE</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">도서명</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">저자</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">빌린 사람 수</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">교인 ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">교인명</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">전화번호</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">이메일</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">빌린 책 수</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {activeTab === 'books' ? (
+                  bookStats.map((book, index) => (
+                    <tr key={book.bookid} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center space-x-2">
+                          <span>{index + 1}</span>
+                          {getRankIcon(index + 1)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">{book.barcode}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 max-w-[300px] truncate" title={book.book_name}>{book.book_name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={book.author}>{book.author}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">{book.persons.toLocaleString()}명</td>
+                    </tr>
+                  ))
+                ) : (
+                  personStats.map((person, index) => (
+                    <tr key={person.person_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center space-x-2">
+                          <span>{index + 1}</span>
+                          {getRankIcon(index + 1)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">{person.person_id}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 max-w-[200px] truncate" title={person.person_name}>{person.person_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">{person.mobilenum || '-'}</td>
+                      <td className="px-6 py-4 text-sm max-w-[250px] truncate" title={person.email}>{person.email || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">{person.books.toLocaleString()}권</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
+          {/* 데이터가 없을 때 */}
+          {((activeTab === 'books' && bookStats.length === 0) || (activeTab === 'people' && personStats.length === 0)) && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">데이터가 없습니다.</p>
+            </div>
+          )}
 
-            {/* Report View Overlay */}
+          {/* 로딩 상태 */}
+          {loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">데이터를 불러오는 중...</p>
+            </div>
+          )}
+
+          {/* 에러 메시지 */}
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-500 text-lg">{error}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PrintReport 모달 */}
       {isReportView && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-4xl max-h-[90vh] overflow-y-auto">
-                         <div className="flex justify-end items-center mb-6">
-               <button
-                 onClick={() => setIsReportView(false)}
-                 className="text-gray-500 hover:text-gray-700 text-2xl"
-               >
-                 ×
-               </button>
-             </div>
-            
-                         <PrintReport
-               reportType={reportType}
-               topBooks={topBooks}
-               topPeople={topPeople}
-               startDate={startDate}
-               endDate={endDate}
-               currentPage={currentPage}
-               totalPages={totalPages}
-             />
-            
-            <div className="mt-6 text-center">
-              <button
-                onClick={handlePrint}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 mx-auto"
-              >
-                <FaPrint />
-                <span>프린트</span>
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-800">Print Preview</h2>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center space-x-2"
+                >
+                  <FaPrint className="text-lg" />
+                  <span>Print</span>
+                </button>
+                <button
+                  onClick={() => setIsReportView(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <PrintReport
+                reportType={activeTab}
+                topBooks={bookStats}
+                topPeople={personStats}
+                startDate={startDate}
+                endDate={endDate}
+                currentPage={currentPage}
+                totalPages={Math.ceil((activeTab === 'books' ? bookStats.length : personStats.length) / itemsPerPage)}
+              />
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

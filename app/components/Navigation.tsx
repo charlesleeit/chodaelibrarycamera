@@ -53,8 +53,7 @@ const Navigation = () => {
       icon: FaFileAlt,
       children: [
         { name: '대출 현황', path: '/loanstatus' },
-        { name: '대출 현황 II', path: '/reports/return' },
-        { name: 'CATEGORY UPDATE', path: '/reports/category-update' },
+                 { name: 'TOP LIST', path: '/reports/toplist' },
       ],
       requiresAuth: true, // 로그인 필요 표시
     },

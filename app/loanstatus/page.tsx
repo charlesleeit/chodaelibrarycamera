@@ -109,8 +109,6 @@ export default function LoanStatusPage() {
     setCurrentPage(page);
   };
 
-
-
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     if (totalPages <= 7) {
@@ -150,6 +148,7 @@ export default function LoanStatusPage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-800">대출 현황 📚</h1>
       </div>
+      
       {/* CONDITION 옵션 */}
       <div className="mb-2 flex items-center space-x-4">
         <label className="text-sm font-medium text-gray-700">TYPE : </label>
@@ -254,11 +253,13 @@ export default function LoanStatusPage() {
           </div>
         </div>
       </div>
+      
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
+      
       <div className="mb-4">
         <input
           type="text"
@@ -269,6 +270,7 @@ export default function LoanStatusPage() {
           ref={searchInputRef}
         />
       </div>
+      
       {loading ? (
         <div className="p-4 text-center">Loading...</div>
       ) : (
@@ -319,6 +321,7 @@ export default function LoanStatusPage() {
               </tbody>
             </table>
           </div>
+          
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-4 flex items-center justify-center border-t border-gray-200">

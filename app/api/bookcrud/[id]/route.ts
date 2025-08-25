@@ -67,6 +67,11 @@ export async function PUT(
   const id = params.id;
   const body = await request.json();
   
+  console.log('=== PUT API UPDATE START ===');
+  console.log('Book ID:', id);
+  console.log('Request body:', body);
+  console.log('Status value:', body.status, 'type:', typeof body.status);
+  
   let pool;
   try {
     pool = await sql.connect(config);
@@ -88,6 +93,46 @@ export async function PUT(
     if (body.author !== undefined) {
       updateFields.push('author = @author');
       inputs.author = body.author;
+    }
+    
+    if (body.status !== undefined) {
+      updateFields.push('status = @status');
+      inputs.status = body.status;
+    }
+    
+    if (body.barcode !== undefined) {
+      updateFields.push('barcode = @barcode');
+      inputs.barcode = body.barcode;
+    }
+    
+    if (body.book_type !== undefined) {
+      updateFields.push('[type] = @book_type');
+      inputs.book_type = body.book_type;
+    }
+    
+    if (body.oldcategory !== undefined) {
+      updateFields.push('oldcategory = @oldcategory');
+      inputs.oldcategory = body.oldcategory;
+    }
+    
+    if (body.authorcode !== undefined) {
+      updateFields.push('authorcode = @authorcode');
+      inputs.authorcode = body.authorcode;
+    }
+    
+    if (body.isbn !== undefined) {
+      updateFields.push('isbn = @isbn');
+      inputs.isbn = body.isbn;
+    }
+    
+    if (body.publish !== undefined) {
+      updateFields.push('publish = @publish');
+      inputs.publish = body.publish;
+    }
+    
+    if (body.publishyear !== undefined) {
+      updateFields.push('publishyear = @publishyear');
+      inputs.publishyear = body.publishyear;
     }
     
     if (updateFields.length === 0) {
@@ -114,8 +159,36 @@ export async function PUT(
     if (inputs.author !== undefined) {
       request.input('author', sql.NVarChar, inputs.author);
     }
+    if (inputs.status !== undefined) {
+      request.input('status', sql.Int, inputs.status);
+    }
+    if (inputs.barcode !== undefined) {
+      request.input('barcode', sql.NVarChar, inputs.barcode);
+    }
+    if (inputs.book_type !== undefined) {
+      request.input('book_type', sql.NVarChar, inputs.book_type);
+    }
+    if (inputs.oldcategory !== undefined) {
+      request.input('oldcategory', sql.NVarChar, inputs.oldcategory);
+    }
+    if (inputs.authorcode !== undefined) {
+      request.input('authorcode', sql.NVarChar, inputs.authorcode);
+    }
+    if (inputs.isbn !== undefined) {
+      request.input('isbn', sql.NVarChar, inputs.isbn);
+    }
+    if (inputs.publish !== undefined) {
+      request.input('publish', sql.NVarChar, inputs.publish);
+    }
+    if (inputs.publishyear !== undefined) {
+      request.input('publishyear', sql.NVarChar, inputs.publishyear);
+    }
     
     const result = await request.query(query);
+    
+    console.log('SQL Query executed:', query);
+    console.log('Input parameters:', inputs);
+    console.log('Rows affected:', result.rowsAffected[0]);
     
     if (result.rowsAffected[0] === 0) {
       return NextResponse.json(

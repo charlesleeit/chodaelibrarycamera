@@ -27,7 +27,6 @@ export default function CategoryUpdatePage() {
   const [scanning, setScanning] = useState<boolean>(false);
   const [updating, setUpdating] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [quaggaInstance, setQuaggaInstance] = useState<any>(null);
   
   const barcodeRef = useRef<HTMLInputElement>(null);
 
@@ -55,62 +54,14 @@ export default function CategoryUpdatePage() {
     { id: '214', name: '214 교회 역사', description: 'Church History' },
   ];
 
-  // 카메라 스캔 시작
-  const startScan = async () => {
-    try {
-      // 동적으로 Quagga 라이브러리 로드
-      const QuaggaModule = await import('quagga');
-      const Quagga = QuaggaModule.default;
-      
-      // Quagga 인스턴스 저장
-      setQuaggaInstance(Quagga);
-      
-      Quagga.init({
-        inputStream: {
-          name: "Live",
-          type: "LiveStream",
-          target: "#interactive",
-          constraints: {
-            facingMode: "environment"
-          },
-        },
-        decoder: {
-          readers: ["ean_reader", "ean_8_reader", "code_128_reader", "code_39_reader", "upc_reader"]
-        },
-        locate: true
-      }, (err: any) => {
-        if (err) {
-          console.error('Quagga 초기화 오류:', err);
-          setMessage({ type: 'error', text: '바코드 스캐너를 초기화할 수 없습니다.' });
-          return;
-        }
-        
-        Quagga.start();
-        setScanning(true);
-      });
-
-      // 바코드 인식 이벤트 리스너
-      Quagga.onDetected((result: any) => {
-        const code = result.codeResult.code;
-        if (code) {
-          handleBarcodeScanned(code);
-        }
-      });
-    } catch (error) {
-      console.error('카메라 접근 오류:', error);
-      setMessage({ type: 'error', text: '카메라에 접근할 수 없습니다.' });
-    }
+  // 카메라 스캔 시작 (현재는 테스트용으로만 동작)
+  const startScan = () => {
+    setScanning(true);
+    // 실제 카메라 스캔 기능은 나중에 구현
   };
 
   // 카메라 스캔 중지
   const stopScan = () => {
-    if (quaggaInstance) {
-      try {
-        quaggaInstance.stop();
-      } catch (error) {
-        console.error('Quagga 중지 오류:', error);
-      }
-    }
     setScanning(false);
   };
 
@@ -193,19 +144,6 @@ export default function CategoryUpdatePage() {
       return () => clearTimeout(timer);
     }
   }, [message]);
-
-  // 컴포넌트 언마운트 시 카메라 정리
-  useEffect(() => {
-    return () => {
-      if (quaggaInstance) {
-        try {
-          quaggaInstance.stop();
-        } catch (error) {
-          console.error('Quagga 정리 오류:', error);
-        }
-      }
-    };
-  }, [quaggaInstance]);
 
   if (!isLoggedIn) {
     return <div className="min-h-screen flex items-center justify-center">Login required.</div>;
@@ -351,8 +289,12 @@ export default function CategoryUpdatePage() {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Barcode Scan</h3>
               
               <div className="relative mb-4">
-                <div id="interactive" className="w-full h-48 sm:h-64 bg-gray-900 rounded-lg overflow-hidden">
-                  {/* Quagga가 여기에 비디오 스트림을 렌더링합니다 */}
+                <div className="w-full h-48 sm:h-64 bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <FaCamera className="text-4xl mx-auto mb-2" />
+                    <p>Camera scanning feature</p>
+                    <p className="text-sm text-gray-400">(Coming soon)</p>
+                  </div>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="border-2 border-red-500 w-32 h-24 sm:w-48 sm:h-32 rounded-lg"></div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Book } from '@/lib/models/book';
 import { FaEdit, FaTrash, FaTimes, FaSave, FaBook } from 'react-icons/fa';
 
-type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publishyear' | 'authorcode';
+type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publish' | 'publishyear' | 'authorcode' | 'oldcategory';
 type SortOrder = 'asc' | 'desc';
 
 export default function Books() {
@@ -22,8 +22,9 @@ export default function Books() {
     oldcategory: '',
     authorcode: '',
     isbn: '',
+    publish: '',
     publishyear: '',
-    status: 0
+    status: 1
   });
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -137,18 +138,67 @@ export default function Books() {
       });
   }, []);
 
-  const fetchBooks = async () => {
-    setLoading(true);
+  const fetchBooks = useCallback(async () => {
     try {
       const response = await fetch('/api/bookcrud');
-      const data = await response.json();
-      setBooks(data);
-    } catch (error: any) {
-      setError(error.message || 'Failed to fetch books');
-    } finally {
-      setLoading(false);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched books data:', data);
+        
+        // status 값 검증 및 수정
+        const validatedBooks = data.map((book: any) => {
+          let status = book.status;
+          
+          // NaN 체크 및 수정
+          if (isNaN(status) || status === null || status === undefined) {
+            console.log(`Book ${book.id} has invalid status: ${book.status}, correcting to 1`);
+            status = 1;
+          }
+          
+          // boolean을 숫자로 변환
+          if (typeof status === 'boolean') {
+            status = status ? 1 : 0;
+            console.log(`Book ${book.id} boolean status converted: ${book.status} -> ${status}`);
+          }
+          
+          // 문자열을 숫자로 변환
+          if (typeof status === 'string') {
+            if (status.toLowerCase() === 'true') {
+              status = 1;
+            } else if (status.toLowerCase() === 'false') {
+              status = 0;
+            } else {
+              status = parseInt(status, 10) || 1;
+            }
+            console.log(`Book ${book.id} string status converted: ${book.status} -> ${status}`);
+          }
+          
+          return {
+            ...book,
+            status: status
+          };
+        });
+        
+        setBooks(validatedBooks);
+        
+        // 첫 번째 책의 status 확인
+        if (validatedBooks.length > 0) {
+          const firstBook = validatedBooks[0];
+          console.log('First book status check (after validation):', {
+            id: firstBook.id,
+            name: firstBook.name,
+            status: firstBook.status,
+            statusType: typeof firstBook.status,
+            statusValue: JSON.stringify(firstBook.status)
+          });
+        }
+      } else {
+        console.error('Failed to fetch books');
+      }
+    } catch (error) {
+      console.error('Error fetching books:', error);
     }
-  };
+  }, []);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -162,7 +212,29 @@ export default function Books() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const isCheckbox = type === 'checkbox';
-    const newValue = isCheckbox ? ((e.target as HTMLInputElement).checked ? 0 : 1) : value;
+    
+    if (name === 'status') {
+      const checked = (e.target as HTMLInputElement).checked;
+      const newValue = checked ? 1 : 0;
+      console.log(`=== STATUS CHECKBOX CHANGE ===`);
+      console.log(`Event target:`, e.target);
+      console.log(`Checkbox checked: ${checked}`);
+      console.log(`New status value: ${newValue}`);
+      console.log(`Previous formData.status: ${formData.status}`);
+      
+      setFormData(prev => {
+        const updated = {
+          ...prev,
+          [name]: newValue
+        };
+        console.log(`Updated form data status: ${updated.status}`);
+        console.log(`Form data after update:`, updated);
+        return updated;
+      });
+      return;
+    }
+    
+    const newValue = value;
     console.log(`Changing ${name} to:`, newValue);
     setFormData(prev => {
       const updated = {
@@ -178,13 +250,29 @@ export default function Books() {
     e.preventDefault();
     setLoading(true);
     
+    console.log('=== FORM SUBMISSION START ===');
     console.log('Form submission - formData:', formData);
+    console.log('Form submission - status value:', formData.status, 'type:', typeof formData.status);
+    console.log('Form submission - status boolean check:', formData.status === 1 ? 'TRUE' : 'FALSE');
     console.log('Form submission - book_type value:', formData.book_type);
+    
+    // 체크박스 상태 확인
+    const statusCheckbox = document.querySelector('input[name="status"]') as HTMLInputElement;
+    if (statusCheckbox) {
+      console.log('Checkbox actual state:', {
+        checked: statusCheckbox.checked,
+        value: statusCheckbox.value,
+        formDataStatus: formData.status
+      });
+    }
     
     try {
       const url = selectedBook 
         ? `/api/bookcrud/${selectedBook.id}`
         : '/api/bookcrud';
+      
+      console.log('Sending request to:', url);
+      console.log('Request body:', JSON.stringify(formData, null, 2));
       
       const response = await fetch(url, {
         method: selectedBook ? 'PUT' : 'POST',
@@ -194,9 +282,16 @@ export default function Books() {
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
         throw new Error('Failed to save book');
       }
+
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
 
       await fetchBooks();
       setSelectedBook(null);
@@ -209,11 +304,13 @@ export default function Books() {
         oldcategory: '',
         authorcode: '',
         isbn: '',
+        publish: '',
         publishyear: '',
-        status: 0
+        status: 1
       });
       setShowForm(false);
     } catch (error: any) {
+      console.error('Submit error:', error);
       setError(error.message || 'Failed to save book');
     } finally {
       setLoading(false);
@@ -242,13 +339,28 @@ export default function Books() {
   };
 
   const handleEdit = (book: Book) => {
+    console.log('=== EDIT BOOK START ===');
     console.log('Editing book with original data:', book);
+    console.log('Original book status:', book.status, 'type:', typeof book.status, 'value:', JSON.stringify(book.status));
+    
+    // status 값 검증 및 수정
+    let status = book.status;
+    if (status === null || status === undefined) {
+      status = 1; // 기본값
+      console.log(`Status corrected from "${book.status}" to ${status}`);
+    } else {
+      status = parseInt(status.toString(), 10); // 숫자로 확실하게 변환
+      console.log(`Status converted to: ${status}`);
+    }
     
     // Ensure category is a string and trim it
     const formattedBook = {
       ...book,
-      category: book.category?.toString().trim() || ''
+      category: book.category?.toString().trim() || '',
+      status: status  // 검증된 status 값 사용
     };
+    
+    console.log('Formatted book status:', formattedBook.status, 'type:', typeof formattedBook.status, 'value:', JSON.stringify(formattedBook.status));
     
     // Find matching category from our categories list
     const matchingCategory = categories.find(cat => cat.code.trim() === formattedBook.category.trim());
@@ -259,7 +371,7 @@ export default function Books() {
       console.log('No matching category found for:', formattedBook.category);
     }
     
-    console.log('Formatted book data:', formattedBook);
+    console.log('Final formatted book data:', formattedBook);
     setSelectedBook(formattedBook);
     setFormData(formattedBook);
     setShowForm(true);
@@ -373,6 +485,16 @@ export default function Books() {
                 </select>
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700">Sub Category</label>
+                <input
+                  type="text"
+                  name="oldcategory"
+                  value={formData.oldcategory}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Book Type</label>
                 <select
                   name="book_type"
@@ -399,16 +521,6 @@ export default function Books() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Old Category</label>
-                <input
-                  type="text"
-                  name="oldcategory"
-                  value={formData.oldcategory}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700">Author Code</label>
                 <input
                   type="text"
@@ -429,6 +541,16 @@ export default function Books() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700">Publish</label>
+                <input
+                  type="text"
+                  name="publish"
+                  value={formData.publish}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Publish Year</label>
                 <input
                   type="text"
@@ -443,11 +565,13 @@ export default function Books() {
               <input
                 type="checkbox"
                 name="status"
-                checked={Boolean(formData.status)}
+                checked={formData.status === 1}
                 onChange={handleInputChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label className="ml-2 block text-sm text-gray-700">Active</label>
+              <label className="ml-2 block text-sm text-gray-700">
+                Active
+              </label>
             </div>
             <div className="flex justify-end space-x-2">
               {selectedBook && (
@@ -463,6 +587,9 @@ export default function Books() {
                       book_type: '',
                       oldcategory: '',
                       authorcode: '',
+                      isbn: '',
+                      publish: '',
+                      publishyear: '',
                       status: 0
                     });
                   }}
@@ -504,13 +631,6 @@ export default function Books() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-600 sticky top-0 z-10">
                 <tr>
-                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">No.</th>
-                  <th 
-                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
-                    onClick={() => handleSort('barcode')}
-                  >
-                    Barcode {sortField === 'barcode' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
                   <th 
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
                     onClick={() => handleSort('name')}
@@ -525,12 +645,28 @@ export default function Books() {
                   </th>
                   <th 
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
+                    onClick={() => handleSort('barcode')}
+                  >
+                    Barcode {sortField === 'barcode' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
                     onClick={() => handleSort('category')}
                   >
                     Category {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Book Type</th>
-                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Old Category</th>
+                  <th 
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
+                    onClick={() => handleSort('oldcategory')}
+                  >
+                    Sub Category {sortField === 'oldcategory' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
+                    onClick={() => handleSort('book_type')}
+                  >
+                    Book Type {sortField === 'book_type' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th 
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
                     onClick={() => handleSort('authorcode')}
@@ -545,6 +681,12 @@ export default function Books() {
                   </th>
                   <th 
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
+                    onClick={() => handleSort('publish')}
+                  >
+                    Publish {sortField === 'publish' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-gray-500"
                     onClick={() => handleSort('publishyear')}
                   >
                     Year {sortField === 'publishyear' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -556,12 +698,6 @@ export default function Books() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentItems.map((book, index) => (
                   <tr key={book.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${book.status === 0 ? 'bg-gray-100 text-gray-500' : ''}`}>
-                    <td className="px-2 py-2 whitespace-nowrap text-sm">
-                      {book.id}
-                    </td>
-                    <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[120px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.barcode}>{book.barcode}</div>
-                    </td>
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[200px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.name}>{book.name}</div>
                     </td>
@@ -569,9 +705,15 @@ export default function Books() {
                       <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.author}>{book.author}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
+                      <div className={`max-w-[120px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.barcode}>{book.barcode}</div>
+                    </td>
+                    <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[200px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.category} - ${categories.find(cat => cat.code === book.category)?.description || ''}`}>
                         {book.category} - {categories.find(cat => cat.code === book.category)?.description || ''}
                       </div>
+                    </td>
+                    <td className="px-2 py-2 text-sm">
+                      <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.oldcategory}>{book.oldcategory}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.book_type} - ${bookTypes.find(type => type.code === book.book_type)?.description || ''}`}>
@@ -588,9 +730,6 @@ export default function Books() {
                       </div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.oldcategory}>{book.oldcategory}</div>
-                    </td>
-                    <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.authorcode}>{book.authorcode}</div>
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm">
@@ -602,17 +741,26 @@ export default function Books() {
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm">
                       {book.status === 0 ? (
+                        <span className="text-gray-400">{book.publish}</span>
+                      ) : (
+                        book.publish
+                      )}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-sm">
+                      {book.status === 0 ? (
                         <span className="text-gray-400">{book.publishyear}</span>
                       ) : (
                         book.publishyear
                       )}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm font-medium">
-                      {Boolean(book.status) ? (
-                        <span className="text-green-600">Active</span>
-                      ) : (
-                        <span className="text-red-600">InActive</span>
-                      )}
+                      <div>
+                        {book.status === 1 ? (
+                          <span className="text-green-600">Active</span>
+                        ) : (
+                          <span className="text-red-600">InActive</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm">
                       <div className="flex items-center space-x-2">

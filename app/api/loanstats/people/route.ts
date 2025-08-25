@@ -44,11 +44,18 @@ export async function GET(request: Request) {
       .input('endDate', sql.VarChar, endDate)
       .query(query);
     
-    return NextResponse.json(result.recordset);
+    return NextResponse.json({
+      success: true,
+      data: result.recordset
+    });
   } catch (error) {
     console.error('Error in loanstats/people API:', error);
     return NextResponse.json(
-      { error: String(error), details: 'Failed to fetch people statistics' },
+      { 
+        success: false, 
+        message: 'Failed to fetch people statistics',
+        error: String(error)
+      },
       { status: 500 }
     );
   } finally {

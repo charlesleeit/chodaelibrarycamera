@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Image from 'next/image';
 
-type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publishyear' | 'authorcode' | 'id' | 'status';
+type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publish' | 'publishyear' | 'authorcode' | 'id' | 'status' | 'oldcategory';
 type SortOrder = 'asc' | 'desc';
 
 // BookInfoModal: 외부 API로 책 정보 fetch 후 모달로 표시
@@ -175,23 +175,16 @@ export default function Books() {
       );
     }
 
-    // Always sort by book.id ascending first
-    result.sort((a, b) => a.id - b.id);
-
-    // Apply sorting (if not sorting by id)
-    if (sortField !== 'barcode' && sortField !== 'name' && sortField !== 'author' && sortField !== 'category' && sortField !== 'book_type' && sortField !== 'isbn' && sortField !== 'publishyear' && sortField !== 'authorcode' && sortField !== 'id' && sortField !== 'status') {
-      // do nothing
-    } else {
-      result.sort((a, b) => {
-        const aValue = a[sortField];
-        const bValue = b[sortField];
-        if (sortOrder === 'asc') {
-          return aValue > bValue ? 1 : -1;
-        } else {
-          return aValue < bValue ? 1 : -1;
-        }
-      });
-    }
+    // Apply sorting by name as default
+    result.sort((a, b) => {
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
 
     setFilteredBooks(result);
     setCurrentPage(1);
@@ -298,18 +291,6 @@ export default function Books() {
                 <tr>
                   <th
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('id')}
-                  >
-                    No. {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th
-                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('barcode')}
-                  >
-                    Barcode {sortField === 'barcode' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th
-                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('name')}
                   >
                     Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -320,18 +301,29 @@ export default function Books() {
                   >
                     Author {sortField === 'author' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Category</th>
                   <th
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('book_type')}
+                    onClick={() => handleSort('barcode')}
                   >
-                    Book Type {sortField === 'book_type' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Barcode {sortField === 'barcode' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('category')}
                   >
-                    Old Category {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Category {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('oldcategory')}
+                  >
+                    Sub Category {sortField === 'oldcategory' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('book_type')}
+                  >
+                    Book Type {sortField === 'book_type' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
@@ -344,6 +336,12 @@ export default function Books() {
                     onClick={() => handleSort('isbn')}
                   >
                     ISBN {sortField === 'isbn' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('publish')}
+                  >
+                    Publish {sortField === 'publish' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-2 py-2 text-left text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
@@ -362,17 +360,14 @@ export default function Books() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentItems.map((book, index) => (
                   <tr key={book.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${book.status === 0 ? 'bg-gray-100 text-gray-500' : ''}`}>
-                    <td className="px-2 py-2 whitespace-nowrap text-sm">
-                      {indexOfFirstItem + index + 1}
-                    </td>
-                    <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[120px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.barcode}>{book.barcode}</div>
-                    </td>
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[200px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.name}>{book.name}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.author}>{book.author}</div>
+                    </td>
+                    <td className="px-2 py-2 text-sm">
+                      <div className={`max-w-[120px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.barcode}>{book.barcode}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.category ? `${book.category} - ${categories.find(cat => cat.code === book.category)?.description || ''}` : ''}>
@@ -389,6 +384,9 @@ export default function Books() {
                       </div>
                     </td>
                     <td className="px-2 py-2 text-sm">
+                      <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.oldcategory}>{book.oldcategory}</div>
+                    </td>
+                    <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.book_type} - ${bookTypes.find(type => type.code === book.book_type)?.description || ''}`}>
                         {book.book_type ? (
                           <>
@@ -401,9 +399,6 @@ export default function Books() {
                           <span className="text-gray-400">-</span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.oldcategory}>{book.oldcategory}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
                       <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.authorcode}>{book.authorcode}</div>
@@ -419,6 +414,13 @@ export default function Books() {
                         >
                           {book.isbn}
                         </span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-sm">
+                      {book.status === 0 ? (
+                        <span className="text-gray-400">{book.publish}</span>
+                      ) : (
+                        book.publish
                       )}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm">

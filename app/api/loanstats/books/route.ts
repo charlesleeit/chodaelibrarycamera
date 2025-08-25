@@ -45,11 +45,18 @@ export async function GET(request: Request) {
       .query(query);
     
     // value 필드로 감싸지 않고 직접 배열 반환
-    return NextResponse.json(result.recordset);
+    return NextResponse.json({
+      success: true,
+      data: result.recordset
+    });
   } catch (error) {
     console.error('Error in loanstats/books API:', error);
     return NextResponse.json(
-      { error: String(error), details: 'Failed to fetch book statistics' },
+      { 
+        success: false, 
+        message: 'Failed to fetch book statistics',
+        error: String(error)
+      },
       { status: 500 }
     );
   } finally {

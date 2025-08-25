@@ -21,6 +21,7 @@ export interface Book {
   status: number; // 1: Active, 0: Inactive
   available?: number; // 1: Available, 0: Borrowed (calculated from OutIn table)
   oldcategory: string;
+  raw_status?: any; // Raw status value from database for debugging
 }
 
 export interface BookInput {

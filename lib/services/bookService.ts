@@ -28,12 +28,37 @@ export async function getAllBooks(): Promise<Book[]> {
             ,[claim]
             ,[registerdate]
             ,[moddate]
-            ,A.[status]
+            ,A.[status] as [raw_status]
+            ,CASE 
+              WHEN A.[status] IS NULL THEN 1
+              WHEN A.[status] = 0 THEN 0
+              WHEN A.[status] = 1 THEN 1
+              WHEN A.[status] = 'true' OR A.[status] = 1 THEN 1
+              WHEN A.[status] = 'false' OR A.[status] = 0 THEN 0
+              WHEN A.[status] = '' THEN 1
+              ELSE 1
+            END as [status]
             ,(case when isnull((select count(*) from OutIn B where B.bookid = A.id and B.closedate is null), 0) > 0 then 0 else 1 end) as [available]
       FROM [book] A 
       LEFT JOIN [category] C ON LTRIM(RTRIM(A.category)) = LTRIM(RTRIM(C.code))
       LEFT JOIN [common] D ON D.grp = '1' AND LTRIM(RTRIM(A.[type])) = LTRIM(RTRIM(D.code))
     `);
+    
+    // 디버깅을 위해 첫 번째 책의 status 값 로그
+    if (result.recordset.length > 0) {
+      const firstBook = result.recordset[0];
+      console.log('=== FIRST BOOK STATUS DEBUG ===');
+      console.log('Raw status from DB:', firstBook.raw_status, 'type:', typeof firstBook.raw_status);
+      console.log('Processed status:', firstBook.status, 'type:', typeof firstBook.status);
+      console.log('Status comparison:', {
+        raw: firstBook.raw_status,
+        processed: firstBook.status,
+        rawType: typeof firstBook.raw_status,
+        processedType: typeof firstBook.status,
+        isEqual: firstBook.raw_status === firstBook.status
+      });
+    }
+    
     return result.recordset;
   } finally {
     await closeConnection();
@@ -68,7 +93,16 @@ export async function getBookById(id: number): Promise<Book | null> {
               ,[claim]
               ,[registerdate]
               ,[moddate]
-              ,A.[status]
+              ,A.[status] as [raw_status]
+              ,CASE 
+                WHEN A.[status] IS NULL THEN 1
+                WHEN A.[status] = 0 THEN 0
+                WHEN A.[status] = 1 THEN 1
+                WHEN A.[status] = 'true' OR A.[status] = 1 THEN 1
+                WHEN A.[status] = 'false' OR A.[status] = 0 THEN 0
+                WHEN A.[status] = '' THEN 1
+                ELSE 1
+              END as [status]
               ,(case when isnull((select count(*) from OutIn B where B.bookid = A.id and B.closedate is null), 0) > 0 then 0 else 1 end) as [available]
         FROM [book] A
         LEFT JOIN [category] C ON LTRIM(RTRIM(A.category)) = LTRIM(RTRIM(C.code))
@@ -77,7 +111,17 @@ export async function getBookById(id: number): Promise<Book | null> {
       `);
     
     if (result.recordset[0]) {
-      console.log('Book data from DB:', result.recordset[0]);
+      const book = result.recordset[0];
+      console.log('=== BOOK BY ID STATUS DEBUG ===');
+      console.log('Raw status from DB:', book.raw_status, 'type:', typeof book.raw_status);
+      console.log('Processed status:', book.status, 'type:', typeof book.status);
+      console.log('Status comparison:', {
+        raw: book.raw_status,
+        processed: book.status,
+        rawType: typeof book.raw_status,
+        processedType: typeof book.status,
+        isEqual: book.raw_status === book.status
+      });
     }
     
     return result.recordset[0] || null;
@@ -89,24 +133,45 @@ export async function getBookById(id: number): Promise<Book | null> {
 export async function createBook(book: BookInput): Promise<Book> {
   const pool = await getConnection();
   try {
+    const sanitized = {
+      barcode: book.barcode ?? '',
+      name: book.name ?? '',
+      num: book.num ?? '',
+      author: book.author ?? '',
+      fullname: book.fullname ?? '',
+      category: (book.category ?? '').toString().trim(),
+      book_type: (book.book_type ?? '').toString().trim(),
+      oldcategory: book.oldcategory ?? '',
+      authorcode: book.authorcode ?? '',
+      claimnum: book.claimnum ?? '',
+      copynum: book.copynum ?? '',
+      isbn: book.isbn ?? '',
+      publish: book.publish ?? '',
+      publishyear: book.publishyear ?? '',
+      attach: book.attach ?? '',
+      claim: book.claim ?? '',
+      status: book.status ?? 1
+    };
+
     const result = await pool
       .request()
-      .input('barcode', book.barcode)
-      .input('name', book.name)
-      .input('num', book.num)
-      .input('author', book.author)
-      .input('fullname', book.fullname)
-      .input('category', book.category)
-      .input('book_type', book.book_type)
-      .input('oldcategory', book.oldcategory)
-      .input('authorcode', book.authorcode)
-      .input('claimnum', book.claimnum)
-      .input('copynum', book.copynum)
-      .input('isbn', book.isbn)
-      .input('publish', book.publish)
-      .input('publishyear', book.publishyear)
-      .input('attach', book.attach)
-      .input('claim', book.claim)
+      .input('barcode', sanitized.barcode)
+      .input('name', sanitized.name)
+      .input('num', sanitized.num)
+      .input('author', sanitized.author)
+      .input('fullname', sanitized.fullname)
+      .input('category', sanitized.category)
+      .input('book_type', sanitized.book_type)
+      .input('oldcategory', sanitized.oldcategory)
+      .input('authorcode', sanitized.authorcode)
+      .input('claimnum', sanitized.claimnum)
+      .input('copynum', sanitized.copynum)
+      .input('isbn', sanitized.isbn)
+      .input('publish', sanitized.publish)
+      .input('publishyear', sanitized.publishyear)
+      .input('attach', sanitized.attach)
+      .input('claim', sanitized.claim)
+      .input('status', sanitized.status)
       .query(`
         INSERT INTO [Library].[dbo].[book] (
           barcode, name, num, author, fullname, category, type, oldcategory, authorcode,
@@ -115,10 +180,13 @@ export async function createBook(book: BookInput): Promise<Book> {
         OUTPUT INSERTED.*
         VALUES (
           @barcode, @name, @num, @author, @fullname, @category, @book_type, @oldcategory, @authorcode,
-          @claimnum, @copynum, @isbn, @publish, @publishyear, @attach, @claim, 1
+          @claimnum, @copynum, @isbn, @publish, @publishyear, @attach, @claim, @status
         )
       `);
     return result.recordset[0];
+  } catch (err) {
+    console.error('createBook failed:', err, { incoming: book });
+    throw err;
   } finally {
     await closeConnection();
   }
