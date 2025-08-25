@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         SELECT DISTINCT A.[bookid], B.barcode, B.name, C.[id], C.name as membername, C.mobilenum, C.email
         FROM [Library].[dbo].[OutIn] A 
         INNER JOIN [dbo].[Book] B ON A.bookid = B.id
-        INNER JOIN [dbo].[vwPeople] C ON A.id = C.id
+        INNER JOIN [dbo].[ChurchMember] C ON A.id = C.id
         WHERE A.opendate BETWEEN @startDate AND @endDate
       ) Z
       GROUP BY [id], membername, mobilenum, email

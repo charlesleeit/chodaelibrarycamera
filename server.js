@@ -17,14 +17,14 @@ const dbConfig = {
   options: { encrypt: false }
 };
 
-// vwPeople에 id 존재 확인
+// ChurchMember에 id 존재 확인
 app.get('/api/people/check', async (req, res) => {
   const { id } = req.query;
 
   try {
     await sql.connect(dbConfig);
 
-    const result = await sql.query`select count(*) as cnt from vwPeople where deleted = 0 and id = ${id}`;
+    const result = await sql.query`select count(*) as cnt from ChurchMember where deleted = 0 and id = ${id}`;
     
     res.json({ exists: result.recordset[0].cnt > 0 });
   } catch (err) {
@@ -59,11 +59,11 @@ app.post('/api/users/add', async (req, res) => {
   }
 });
 
-// vwPeople에서 id, name, mobilenum 목록 조회
+// ChurchMember에서 id, name, mobilenum 목록 조회
 app.get('/api/people/list', async (req, res) => {
   try {
     await sql.connect(dbConfig);
-    const result = await sql.query`SELECT id, name, mobilenum FROM vwPeople where deleted = 0`;
+    const result = await sql.query`SELECT id, name, mobilenum FROM ChurchMember where deleted = 0`;
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });

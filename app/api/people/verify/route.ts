@@ -28,13 +28,13 @@ export async function POST(request: Request) {
     // Connect to the database
     pool = await sql.connect(config);
 
-    // Query the vwPeople view to verify the member
+    // Query the ChurchMember view to verify the member
     const result = await sql.query`
       SELECT TOP (1) [id]
             ,[name]
             ,replace([mobilenum], '-','') as mobilenum
             ,[gender]
-      FROM [Library].[dbo].[vwPeople]
+      FROM [Library].[dbo].[ChurchMember]
       WHERE deleted != 1
       AND id = ${id}
     `;

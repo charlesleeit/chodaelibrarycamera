@@ -6,7 +6,7 @@ export async function getAllLoanStatus(): Promise<LoanStatus[]> {
   try {
     const result = await pool.request().query(`
       SELECT A.[id], B.[name] as person_name, A.[bookid], C.[barcode], C.[name] AS book_name, C.[author], A.[date] as outdate, A.[closedate]
-        FROM [OutIn] A LEFT OUTER JOIN vwPeople B ON A.id = B.id
+        FROM [OutIn] A LEFT OUTER JOIN ChurchMember B ON A.id = B.id
                        LEFT OUTER JOIN [Book] C ON C.id = A.[bookid]
        ORDER BY A.[date] DESC, C.[name], A.[id]
     `);
