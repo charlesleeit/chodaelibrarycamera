@@ -1,17 +1,13 @@
-import { NextConfig } from 'next';
+import type { NextConfig } from 'next'
 
-const config: NextConfig = {
-  output: 'standalone',
-  experimental: {
-    typedRoutes: true
+const nextConfig: NextConfig = {
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
+    return config;
   },
-  typescript: {
-    ignoreBuildErrors: true
-  },
-  reactStrictMode: true,
-  images: {
-    unoptimized: true
-  }
-};
+}
 
-export default config;
+export default nextConfig
