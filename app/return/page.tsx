@@ -27,8 +27,8 @@ export default function ReturnPage() {
     }
   }, []);
 
-  // 파일 업로드로 바코드 스캔
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // 사진 촬영으로 바코드 스캔
+  const handleTakePhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -57,7 +57,7 @@ export default function ReturnPage() {
           }
         }, (result: any) => {
           if (result && result.codeResult) {
-            console.log('Barcode detected from file:', result);
+            console.log('Barcode detected from photo:', result);
             const code = result.codeResult.code;
             setReturnBookId(code);
             setReturnError('');
@@ -66,15 +66,26 @@ export default function ReturnPage() {
             
             if (bookReturnInputRef.current) {
               bookReturnInputRef.current.focus();
+              // 잠시 후 자동으로 Return 처리
+              setTimeout(() => {
+                handleBookReturn();
+              }, 500);
             }
           } else {
-            setReturnError('이미지에서 바코드를 찾을 수 없습니다. 더 선명한 이미지를 사용해주세요.');
+            setReturnError('사진에서 바코드를 찾을 수 없습니다. 더 선명한 사진을 찍어주세요.');
           }
         });
       };
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  // 사진 촬영 버튼 클릭 핸들러
+  const handleTakePhotoClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   // 카메라 권한 확인
@@ -86,8 +97,21 @@ export default function ReturnPage() {
       return false;
     }
 
+    // HTTPS 체크 (카메라 접근을 위해 필요)
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      console.warn('Camera access requires HTTPS in production');
+      setReturnError('카메라 접근을 위해 HTTPS가 필요합니다. 개발 환경에서는 localhost에서만 작동합니다.');
+      return false;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: {
+          facingMode: 'environment', // 후면 카메라 우선
+          width: { min: 640, ideal: 1280 },
+          height: { min: 480, ideal: 720 }
+        } 
+      });
       console.log('Camera permission granted, stream:', stream);
       stream.getTracks().forEach(track => track.stop()); // 스트림 정리
       return true;
@@ -128,6 +152,20 @@ export default function ReturnPage() {
 
     try {
       console.log('Starting Quagga initialization...');
+      console.log('Scanner ref element:', scannerRef.current);
+      
+      // Ensure the target element exists and is visible
+      if (!scannerRef.current) {
+        console.error('Scanner ref element not found');
+        setReturnError('스캐너 요소를 찾을 수 없습니다.');
+        setIsScanning(false);
+        return;
+      }
+
+      // 스캐너 컨테이너를 명확하게 표시
+      scannerRef.current.style.display = 'block';
+      scannerRef.current.style.visibility = 'visible';
+      
       Quagga.init({
         inputStream: {
           name: "Live",
@@ -157,6 +195,26 @@ export default function ReturnPage() {
         setIsScanning(true);
         setReturnError(''); // 이전 오류 메시지 클리어
         console.log('Scanner started successfully');
+        
+        // 카메라 요소가 실제로 생성되었는지 확인
+        setTimeout(() => {
+          const videoElement = scannerRef.current?.querySelector('video');
+          if (videoElement) {
+            console.log('Video element found:', videoElement);
+            console.log('Video readyState:', videoElement.readyState);
+            console.log('Video srcObject:', videoElement.srcObject);
+          } else {
+            console.error('Video element not found in scanner container');
+            setReturnError('카메라 요소를 찾을 수 없습니다. 브라우저를 새로고침하고 다시 시도해주세요.');
+          }
+        }, 2000);
+        
+        // 5초 후에도 카메라가 보이지 않으면 안내 메시지 표시
+        setTimeout(() => {
+          if (isScanning && scannerRef.current && !scannerRef.current.querySelector('video')) {
+            setReturnError('실시간 카메라가 작동하지 않습니다. "Take Photo" 버튼을 사용하여 사진을 찍어주세요.');
+          }
+        }, 5000);
       });
 
       // 바코드 감지 이벤트
@@ -169,9 +227,13 @@ export default function ReturnPage() {
         setBookInfo(null);
         setReturnSuccess(false);
         
-        // 입력 필드에 포커스
+        // 입력 필드에 포커스하고 자동으로 Return 처리
         if (bookReturnInputRef.current) {
           bookReturnInputRef.current.focus();
+          // 잠시 후 자동으로 Return 처리
+          setTimeout(() => {
+            handleBookReturn();
+          }, 500);
         }
       });
 
@@ -203,14 +265,10 @@ export default function ReturnPage() {
       stopScanner();
     } else {
       console.log('Starting scanner...');
-      initScanner();
-    }
-  };
-
-  // 파일 업로드 버튼 클릭 핸들러
-  const handleFileButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        initScanner();
+      }, 100);
     }
   };
 
@@ -291,11 +349,11 @@ export default function ReturnPage() {
               ref={bookReturnInputRef}
               disabled={loadingReturn}
             />
-            {/* 카메라 버튼 */}
+            {/* 실시간 카메라 스캔 버튼 */}
             <button
               type="button"
               className={`flex items-center justify-center w-12 h-10 ${isScanning ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors font-bold text-base${loadingReturn ? ' opacity-60 cursor-not-allowed' : ''}`}
-              title={isScanning ? "Stop Scanning" : "Scan Barcode"}
+              title={isScanning ? "Stop Scanning" : "Live Scan"}
               onClick={handleCameraClick}
               disabled={loadingReturn}
             >
@@ -310,26 +368,29 @@ export default function ReturnPage() {
                 </svg>
               )}
             </button>
-            {/* 파일 업로드 버튼 */}
+            {/* 사진 촬영 버튼 */}
             <button
               type="button"
               className="flex items-center justify-center w-12 h-10 bg-green-600 hover:bg-green-700 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors font-bold text-base"
-              title="Upload Barcode Image"
-              onClick={handleFileButtonClick}
+              title="Take Photo"
+              onClick={handleTakePhotoClick}
               disabled={loadingReturn}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
-            {/* 숨겨진 파일 입력 */}
+            {/* 숨겨진 사진 촬영 입력 */}
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleFileUpload}
+              capture="environment"
+              onChange={handleTakePhoto}
               style={{ display: 'none' }}
             />
+
             <button
               type="button"
               className={`flex items-center justify-center w-16 h-10 bg-red-600 text-white rounded-full hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-bold text-base${loadingReturn ? ' opacity-60 cursor-not-allowed' : ''}`}
@@ -358,7 +419,7 @@ export default function ReturnPage() {
               <div 
                 ref={scannerRef} 
                 className="w-full h-64 bg-black rounded border-2 border-blue-400 overflow-hidden"
-                style={{ position: 'relative' }}
+                style={{ position: 'relative', minHeight: '256px' }}
               />
             </div>
           )}
@@ -383,4 +444,4 @@ export default function ReturnPage() {
       </div>
     </div>
   );
-} 
+}
