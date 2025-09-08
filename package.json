@@ -1,0 +1,37 @@
+{
+  "name": "library",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "pm2:start": "pm2 start node_modules/next/dist/bin/next --name library -- start -p 3000",
+    "pm2:stop": "pm2 stop picker",
+    "pm2:restart": "pm2 restart picker",
+    "pm2:delete": "pm2 delete picker",
+    "pm2:logs": "pm2 logs picker"
+  },
+  "dependencies": {
+    "@types/mssql": "^9.1.7",
+    "@zxing/library": "^0.21.3",
+    "mssql": "^11.0.1",
+    "next": "^14.2.3",
+    "quagga": "^0.12.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-icons": "^5.5.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.2.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
