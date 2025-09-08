@@ -343,9 +343,9 @@ export default function TakeoutPage() {
   }, [scanError]);
 
   if (showConfirmation) {
-    return (
-      <div className="mx-auto p-4" style={{ maxWidth: '144rem' }}>
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">Member Verification</h1>
           
           <form onSubmit={handleConfirmation} className="space-y-4">
@@ -414,8 +414,9 @@ export default function TakeoutPage() {
   }
 
   return (
-    <div className="mx-auto p-4" style={{ maxWidth: '144rem' }}>
-      <div className="mb-6">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl">
+        <div className="mb-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
             
