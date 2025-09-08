@@ -131,6 +131,13 @@ export default function ReturnPage() {
         }
       };
 
+      // iOS에서 getUserMedia 호출 전에 미리 호출
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (e) {
+        console.log('Pre-call failed, continuing with main call');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('Stream obtained:', stream);
       console.log('Video tracks:', stream.getVideoTracks());
@@ -146,6 +153,9 @@ export default function ReturnPage() {
         videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.setAttribute('webkit-playsinline', 'true');
         videoRef.current.muted = true;
+        videoRef.current.playsInline = true;
+        videoRef.current.controls = false;
+        videoRef.current.autoplay = true;
         
         // video 요소 상태 확인
         console.log('Video element:', videoRef.current);
@@ -196,6 +206,14 @@ export default function ReturnPage() {
             videoRef.current.play().catch(e => console.warn('Delayed play failed:', e));
           }
         }, 1000);
+
+        // iOS에서 추가 재생 시도 (더 긴 간격)
+        setTimeout(() => {
+          if (videoRef.current && videoRef.current.paused) {
+            console.log('Second attempt to play video');
+            videoRef.current.play().catch(e => console.warn('Second play attempt failed:', e));
+          }
+        }, 3000);
       } else {
         console.error('Video ref is null');
       }
@@ -609,6 +627,9 @@ export default function ReturnPage() {
               <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
                 📱 iPhone 사용자: 카메라가 보이지 않으면 Safari를 사용해보세요.
               </div>
+              <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+                🔧 디버깅: 비디오가 표시되지 않으면 페이지를 새로고침하고 다시 시도해주세요.
+              </div>
               <div className="relative">
                 <video
                   ref={videoRef}
@@ -641,6 +662,8 @@ export default function ReturnPage() {
                   <div>ReadyState: {videoRef.current?.readyState || 'N/A'}</div>
                   <div>Dimensions: {videoRef.current?.videoWidth || 0}x{videoRef.current?.videoHeight || 0}</div>
                   <div>SrcObject: {videoRef.current?.srcObject ? 'Yes' : 'No'}</div>
+                  <div>PlaysInline: {videoRef.current?.playsInline ? 'Yes' : 'No'}</div>
+                  <div>Muted: {videoRef.current?.muted ? 'Yes' : 'No'}</div>
                 </div>
               </div>
             </div>
