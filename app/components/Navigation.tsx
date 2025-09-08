@@ -123,7 +123,7 @@ const Navigation = () => {
               <ul className="space-y-1">
                 {menuItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = pathname === item.path || pathname.startsWith(item.path);
+                  const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
                   
                   // 로그인이 필요한 메뉴이고 로그인되지 않은 경우 건너뛰기
                   if (item.requiresAuth && !isLoggedIn) {
@@ -285,7 +285,7 @@ const Navigation = () => {
           <ul className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.path || pathname.startsWith(item.path);
+              const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
               
               // 로그인이 필요한 메뉴이고 로그인되지 않은 경우 건너뛰기
               if (item.requiresAuth && !isLoggedIn) {
