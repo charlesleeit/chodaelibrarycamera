@@ -417,7 +417,7 @@ export default function TakeoutPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-6xl">
         <div className="mb-6">
-        <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
             
             <form onSubmit={handleSmartSearch} className="flex gap-0 items-end justify-between mb-0 pb-0">
@@ -556,6 +556,7 @@ export default function TakeoutPage() {
               <FaChevronRight />
             </button>
           </nav>
+        </div>
         </div>
       </div>
     </div>
