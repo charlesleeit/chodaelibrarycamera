@@ -50,38 +50,93 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
   if (!open) return null;
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'white', padding: 24, borderRadius: 8, minWidth: 400, maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+      <div style={{ 
+        background: 'white', 
+        padding: 24, 
+        borderRadius: 8, 
+        width: '500px', 
+        height: '600px', 
+        overflowY: 'auto', 
+        position: 'relative',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+      }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 8, right: 8, fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center' }}>로딩중...</div>
         ) : error ? (
           <div style={{ color: 'red', padding: 20 }}>{error}</div>
         ) : book ? (
-          <div>
-            {book.imageLinks?.thumbnail && (
-              <Image
-                src={book.imageLinks.thumbnail}
-                alt={book.title}
-                width={180}
-                height={240}
-                style={{ width: '100%', maxHeight: 180, objectFit: 'contain', marginBottom: 12 }}
-              />
-            )}
-            <h2 style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8 }}>{book.title}</h2>
-            <div style={{ marginBottom: 4 }}><b>저자:</b> {book.authors?.join(', ') || 'Unknown'}</div>
-            <div style={{ marginBottom: 4 }}><b>출판사:</b> {book.publisher}</div>
-            <div style={{ marginBottom: 4 }}><b>출판일:</b> {book.publishedDate}</div>
-            <div style={{ marginBottom: 4 }}><b>ISBN:</b> {book.isbn}</div>
-            <div style={{ marginBottom: 4 }}><b>페이지:</b> {book.pageCount} pages</div>
-            <div style={{ marginBottom: 4 }}><b>언어:</b> {book.language}</div>
-            {book.categories && book.categories.length > 0 && (
-              <div style={{ marginBottom: 4 }}><b>카테고리:</b> {book.categories.join(', ')}</div>
-            )}
-            {book.averageRating > 0 && (
-              <div style={{ marginBottom: 4 }}><b>평점:</b> ⭐ {book.averageRating}/5 ({book.ratingsCount} reviews)</div>
-            )}
-            <div style={{ marginBottom: 8 }}><b>설명:</b> {book.description}</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* 책 표지와 기본 정보 */}
+            <div style={{ display: 'flex', marginBottom: 16, gap: 16 }}>
+              {book.imageLinks?.thumbnail && (
+                <div style={{ flexShrink: 0 }}>
+                  <Image
+                    src={book.imageLinks.thumbnail}
+                    alt={book.title}
+                    width={120}
+                    height={160}
+                    style={{ 
+                      width: '120px', 
+                      height: '160px', 
+                      objectFit: 'cover', 
+                      borderRadius: '4px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 style={{ 
+                  fontWeight: 'bold', 
+                  fontSize: 18, 
+                  marginBottom: 8, 
+                  lineHeight: '1.3',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical'
+                }}>
+                  {book.title}
+                </h2>
+                <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                  <div style={{ marginBottom: 3 }}><b>저자:</b> <span style={{ color: '#666' }}>{book.authors?.join(', ') || 'Unknown'}</span></div>
+                  <div style={{ marginBottom: 3 }}><b>출판사:</b> <span style={{ color: '#666' }}>{book.publisher}</span></div>
+                  <div style={{ marginBottom: 3 }}><b>출판일:</b> <span style={{ color: '#666' }}>{book.publishedDate}</span></div>
+                  <div style={{ marginBottom: 3 }}><b>ISBN:</b> <span style={{ color: '#666' }}>{book.isbn}</span></div>
+                  <div style={{ marginBottom: 3 }}><b>페이지:</b> <span style={{ color: '#666' }}>{book.pageCount} pages</span></div>
+                  <div style={{ marginBottom: 3 }}><b>언어:</b> <span style={{ color: '#666' }}>{book.language}</span></div>
+                  {book.categories && book.categories.length > 0 && (
+                    <div style={{ marginBottom: 3 }}><b>카테고리:</b> <span style={{ color: '#666' }}>{book.categories.join(', ')}</span></div>
+                  )}
+                  {book.averageRating > 0 && (
+                    <div style={{ marginBottom: 3 }}><b>평점:</b> <span style={{ color: '#666' }}>⭐ {book.averageRating}/5 ({book.ratingsCount} reviews)</span></div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* 설명 */}
+            <div style={{ flex: 1, marginBottom: 16 }}>
+              <h3 style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>설명</h3>
+              <div style={{ 
+                fontSize: '14px', 
+                lineHeight: '1.5', 
+                color: '#666',
+                maxHeight: '120px',
+                overflowY: 'auto',
+                padding: '8px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '4px',
+                border: '1px solid #e9ecef'
+              }}>
+                {book.description || '설명이 없습니다.'}
+              </div>
+            </div>
+            
+            {/* 링크 버튼들 */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
               {book.previewLink && (
                 <a 
                   href={book.previewLink} 
@@ -89,11 +144,23 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                   rel="noopener noreferrer" 
                   style={{ 
                     color: '#2563eb', 
-                    textDecoration: 'underline',
+                    textDecoration: 'none',
                     fontSize: '14px',
-                    padding: '4px 8px',
+                    padding: '8px 16px',
                     border: '1px solid #2563eb',
-                    borderRadius: '4px'
+                    borderRadius: '6px',
+                    backgroundColor: '#f0f9ff',
+                    transition: 'all 0.2s',
+                    flex: 1,
+                    textAlign: 'center'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f0f9ff';
+                    e.currentTarget.style.color = '#2563eb';
                   }}
                 >
                   미리보기
@@ -106,14 +173,26 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                   rel="noopener noreferrer" 
                   style={{ 
                     color: '#059669', 
-                    textDecoration: 'underline',
+                    textDecoration: 'none',
                     fontSize: '14px',
-                    padding: '4px 8px',
+                    padding: '8px 16px',
                     border: '1px solid #059669',
-                    borderRadius: '4px'
+                    borderRadius: '6px',
+                    backgroundColor: '#f0fdf4',
+                    transition: 'all 0.2s',
+                    flex: 1,
+                    textAlign: 'center'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#059669';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f0fdf4';
+                    e.currentTarget.style.color = '#059669';
                   }}
                 >
-                  Google Books에서 보기
+                  Google Books
                 </a>
               )}
             </div>
