@@ -96,6 +96,13 @@ export default function ReturnPage() {
   // 카메라 디바이스 목록 가져오기
   const listCameras = async () => {
     try {
+      // iOS에서는 먼저 권한을 요청해야 디바이스 라벨을 가져올 수 있음
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch (permissionError) {
+        console.log('Permission request failed:', permissionError);
+      }
+      
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cams = devices.filter(d => d.kind === 'videoinput');
       setAvailableDevices(cams);
@@ -112,28 +119,85 @@ export default function ReturnPage() {
     try {
       setScannerStatus('Requesting...');
       
+      // iOS 호환성을 위한 제약 조건 수정
       const constraints = {
         audio: false,
         video: {
           deviceId: selectedDevice ? { exact: selectedDevice } : undefined,
           facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30, max: 60 }
+          width: { min: 320, ideal: 640, max: 1280 },
+          height: { min: 240, ideal: 480, max: 720 },
+          frameRate: { ideal: 15, max: 30 }
         }
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Stream obtained:', stream);
+      console.log('Video tracks:', stream.getVideoTracks());
+      console.log('Track settings:', stream.getVideoTracks()[0]?.getSettings());
+      
       setScannerState(prev => ({ ...prev, stream, track: stream.getVideoTracks()[0] }));
       
       if (videoRef.current) {
+        console.log('Setting video srcObject:', stream);
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        
+        // iOS에서 필요한 속성들 추가
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
+        videoRef.current.muted = true;
+        
+        // video 요소 상태 확인
+        console.log('Video element:', videoRef.current);
+        console.log('Video srcObject:', videoRef.current.srcObject);
+        console.log('Video readyState:', videoRef.current.readyState);
+        
+        // play() 호출을 Promise로 감싸서 에러 처리
+        try {
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            await playPromise;
+            console.log('Video play successful');
+          }
+        } catch (playError) {
+          console.warn('Video play failed:', playError);
+          // iOS에서는 사용자 제스처가 필요할 수 있음
+        }
         
         // 미러 효과 적용
         if (mirrorEnabled) {
           videoRef.current.style.transform = 'scaleX(-1)';
         }
+        
+        // video 로드 이벤트 리스너 추가
+        videoRef.current.addEventListener('loadedmetadata', () => {
+          console.log('Video metadata loaded');
+          console.log('Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+        });
+        
+        videoRef.current.addEventListener('canplay', () => {
+          console.log('Video can play');
+          // 강제로 재생 시도
+          videoRef.current?.play().catch(e => console.warn('Force play failed:', e));
+        });
+        
+        videoRef.current.addEventListener('playing', () => {
+          console.log('Video is playing');
+        });
+        
+        videoRef.current.addEventListener('error', (e) => {
+          console.error('Video error:', e);
+        });
+        
+        // 1초 후 강제로 재생 시도
+        setTimeout(() => {
+          if (videoRef.current && videoRef.current.paused) {
+            console.log('Force playing video after timeout');
+            videoRef.current.play().catch(e => console.warn('Delayed play failed:', e));
+          }
+        }, 1000);
+      } else {
+        console.error('Video ref is null');
       }
 
       // 손전등 지원 확인
@@ -153,10 +217,29 @@ export default function ReturnPage() {
       setScannerStatus('Scanning');
       setIsScanning(true);
       
+      // 사용자에게 카메라 사용 안내
+      console.log('📹 카메라가 시작되었습니다. 상단의 빨간 비디오 아이콘은 정상 작동 표시입니다.');
+      
     } catch (e) {
       console.error('Scanner start failed:', e);
       setScannerStatus('Error');
-      setReturnError('카메라를 사용할 수 없습니다. 권한/HTTPS/브라우저를 확인하세요.');
+      
+      // iOS 특화 에러 메시지
+      if (e instanceof Error) {
+        if (e.name === 'NotAllowedError') {
+          setReturnError('카메라 권한이 거부되었습니다. iPhone 설정 > Safari > 카메라에서 허용해주세요.');
+        } else if (e.name === 'NotFoundError') {
+          setReturnError('카메라를 찾을 수 없습니다. iPhone의 카메라가 정상 작동하는지 확인해주세요.');
+        } else if (e.name === 'NotSupportedError') {
+          setReturnError('이 브라우저는 카메라를 지원하지 않습니다. Safari를 사용해보세요.');
+        } else if (e.name === 'NotReadableError') {
+          setReturnError('카메라가 다른 앱에서 사용 중입니다. 다른 앱을 종료하고 다시 시도해주세요.');
+        } else {
+          setReturnError(`카메라 오류: ${e.message}. iPhone에서 Safari를 사용해보세요.`);
+        }
+      } else {
+        setReturnError('카메라를 사용할 수 없습니다. iPhone에서 Safari를 사용해보세요.');
+      }
     }
   };
 
@@ -301,11 +384,16 @@ export default function ReturnPage() {
   };
 
   // 카메라 버튼 클릭 핸들러
-  const handleCameraClick = () => {
+  const handleCameraClick = async () => {
     if (isScanning) {
       stopScanner();
     } else {
-      startScanner();
+      // iOS에서는 사용자 제스처가 필요하므로 즉시 시작
+      try {
+        await startScanner();
+      } catch (error) {
+        console.error('Camera start failed:', error);
+      }
     }
   };
 
@@ -377,11 +465,16 @@ export default function ReturnPage() {
             scannerStatus === 'Error' ? 'bg-red-100 text-red-800' :
             'bg-gray-100 text-gray-800'
           }`}>
-            {scannerStatus}
+            {scannerStatus === 'Scanning' ? '📹 카메라 작동 중' : scannerStatus}
           </span>
           <span className="text-sm text-gray-600">
             {scannerState.useNative ? 'BarcodeDetector (Native)' : 'ZXing (Fallback)'}
           </span>
+          {scannerStatus === 'Scanning' && (
+            <span className="text-xs text-blue-600">
+              💡 상단의 빨간 아이콘은 정상 작동 표시입니다
+            </span>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 flex-1 mt-6">
@@ -509,14 +602,46 @@ export default function ReturnPage() {
                   Stop Scanning
                 </button>
               </div>
+              {/* 카메라 사용 안내 메시지 */}
+              <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                📹 상단의 빨간 비디오 아이콘은 카메라가 정상 작동 중임을 나타냅니다.
+              </div>
+              <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                📱 iPhone 사용자: 카메라가 보이지 않으면 Safari를 사용해보세요.
+              </div>
               <div className="relative">
                 <video
                   ref={videoRef}
                   className="w-full h-64 bg-black rounded border-2 border-blue-400"
                   playsInline
+                  webkit-playsinline="true"
                   muted
+                  autoPlay
+                  controls={false}
+                  width="640"
+                  height="480"
+                  style={{ 
+                    objectFit: 'cover',
+                    display: 'block',
+                    visibility: 'visible',
+                    opacity: 1,
+                    zIndex: 1,
+                    minWidth: '320px',
+                    minHeight: '240px',
+                    maxWidth: '100%',
+                    maxHeight: '100%'
+                  }}
                 />
                 <div className="absolute inset-0 border-2 border-dashed border-blue-400 rounded pointer-events-none opacity-50"></div>
+                {/* 디버깅용 정보 표시 */}
+                <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
+                  <div>Stream: {scannerState.stream ? 'Yes' : 'No'}</div>
+                  <div>Video: {videoRef.current ? 'Yes' : 'No'}</div>
+                  <div>Playing: {videoRef.current?.paused === false ? 'Yes' : 'No'}</div>
+                  <div>ReadyState: {videoRef.current?.readyState || 'N/A'}</div>
+                  <div>Dimensions: {videoRef.current?.videoWidth || 0}x{videoRef.current?.videoHeight || 0}</div>
+                  <div>SrcObject: {videoRef.current?.srcObject ? 'Yes' : 'No'}</div>
+                </div>
               </div>
             </div>
           )}
