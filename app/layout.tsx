@@ -4,6 +4,7 @@ import "./globals.css";
 import Navigation from "./components/Navigation";
 import { AuthProvider } from "./context/AuthContext";
 import UserProfile from "./components/UserProfile";
+import PageTitle from "./components/PageTitle";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -85,7 +86,7 @@ export default function RootLayout({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <PageTitle />
                   </div>
 
                   {/* Right side - User actions */}

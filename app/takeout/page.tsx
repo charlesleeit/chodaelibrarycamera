@@ -418,7 +418,6 @@ export default function TakeoutPage() {
       <div className="mb-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Take Out Records</h1>
             
             <form onSubmit={handleSmartSearch} className="flex gap-0 items-end justify-between mb-0 pb-0">
               {/* Book Scan Field */}

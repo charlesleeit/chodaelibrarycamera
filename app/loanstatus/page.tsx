@@ -129,7 +129,6 @@ export default function LoanStatusPage() {
   if (!isLoggedIn) {
     return (
       <div className="container mx-auto p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">대출 현황</h1>
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4 inline-block">
           이 페이지는 로그인한 사용자만 볼 수 있습니다.
         </div>
@@ -146,7 +145,6 @@ export default function LoanStatusPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">대출 현황 📚</h1>
       </div>
       
       {/* CONDITION 옵션 */}

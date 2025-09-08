@@ -113,7 +113,6 @@ export default function Settings() {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-2">
-          <h1 className="text-2xl font-bold text-gray-800">BOOK LIST</h1>
         </div>
         <button 
           onClick={() => window.location.href = '/'} 

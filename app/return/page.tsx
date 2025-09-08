@@ -369,7 +369,6 @@ export default function ReturnPage() {
   return (
     <div className="mx-auto p-4" style={{ maxWidth: '144rem' }}>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Book Return</h1>
         
         {/* Scanner Status */}
         <div className="mb-4 flex items-center gap-4">
