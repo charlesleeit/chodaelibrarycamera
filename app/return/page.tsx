@@ -157,6 +157,19 @@ export default function ReturnPage() {
         videoRef.current.controls = false;
         videoRef.current.autoplay = true;
         
+        // 강제로 속성 재설정
+        videoRef.current.setAttribute('muted', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.setAttribute('controls', 'false');
+        
+        console.log('Video attributes set:', {
+          playsinline: videoRef.current.getAttribute('playsinline'),
+          webkitPlaysinline: videoRef.current.getAttribute('webkit-playsinline'),
+          muted: videoRef.current.getAttribute('muted'),
+          autoplay: videoRef.current.getAttribute('autoplay'),
+          controls: videoRef.current.getAttribute('controls')
+        });
+        
         // video 요소 상태 확인
         console.log('Video element:', videoRef.current);
         console.log('Video srcObject:', videoRef.current.srcObject);
@@ -211,6 +224,12 @@ export default function ReturnPage() {
         setTimeout(() => {
           if (videoRef.current && videoRef.current.paused) {
             console.log('Second attempt to play video');
+            // 속성 재확인 및 재설정
+            videoRef.current.setAttribute('playsinline', 'true');
+            videoRef.current.setAttribute('webkit-playsinline', 'true');
+            videoRef.current.setAttribute('muted', 'true');
+            videoRef.current.muted = true;
+            videoRef.current.playsInline = true;
             videoRef.current.play().catch(e => console.warn('Second play attempt failed:', e));
           }
         }, 3000);
@@ -651,6 +670,16 @@ export default function ReturnPage() {
                     minHeight: '240px',
                     maxWidth: '100%',
                     maxHeight: '100%'
+                  }}
+                  onLoadedMetadata={() => {
+                    console.log('Video metadata loaded, re-setting attributes');
+                    if (videoRef.current) {
+                      videoRef.current.setAttribute('playsinline', 'true');
+                      videoRef.current.setAttribute('webkit-playsinline', 'true');
+                      videoRef.current.setAttribute('muted', 'true');
+                      videoRef.current.muted = true;
+                      videoRef.current.playsInline = true;
+                    }
                   }}
                 />
                 <div className="absolute inset-0 border-2 border-dashed border-blue-400 rounded pointer-events-none opacity-50"></div>
