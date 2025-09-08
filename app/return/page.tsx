@@ -147,20 +147,22 @@ export default function ReturnPage() {
       
       if (videoRef.current) {
         console.log('Setting video srcObject:', stream);
-        videoRef.current.srcObject = stream;
         
-        // iOS에서 필요한 속성들 추가
+        // iOS에서 필요한 속성들을 먼저 설정
         videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.setAttribute('webkit-playsinline', 'true');
+        videoRef.current.setAttribute('muted', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.setAttribute('controls', 'false');
+        
+        // JavaScript 속성도 설정
         videoRef.current.muted = true;
         videoRef.current.playsInline = true;
         videoRef.current.controls = false;
         videoRef.current.autoplay = true;
         
-        // 강제로 속성 재설정
-        videoRef.current.setAttribute('muted', 'true');
-        videoRef.current.setAttribute('autoplay', 'true');
-        videoRef.current.setAttribute('controls', 'false');
+        // 스트림 설정
+        videoRef.current.srcObject = stream;
         
         console.log('Video attributes set:', {
           playsinline: videoRef.current.getAttribute('playsinline'),
@@ -168,6 +170,13 @@ export default function ReturnPage() {
           muted: videoRef.current.getAttribute('muted'),
           autoplay: videoRef.current.getAttribute('autoplay'),
           controls: videoRef.current.getAttribute('controls')
+        });
+        
+        console.log('Video properties:', {
+          muted: videoRef.current.muted,
+          playsInline: videoRef.current.playsInline,
+          controls: videoRef.current.controls,
+          autoplay: videoRef.current.autoplay
         });
         
         // video 요소 상태 확인
@@ -216,6 +225,12 @@ export default function ReturnPage() {
         setTimeout(() => {
           if (videoRef.current && videoRef.current.paused) {
             console.log('Force playing video after timeout');
+            // 속성 재설정
+            videoRef.current.setAttribute('playsinline', 'true');
+            videoRef.current.setAttribute('webkit-playsinline', 'true');
+            videoRef.current.setAttribute('muted', 'true');
+            videoRef.current.muted = true;
+            videoRef.current.playsInline = true;
             videoRef.current.play().catch(e => console.warn('Delayed play failed:', e));
           }
         }, 1000);
@@ -233,6 +248,35 @@ export default function ReturnPage() {
             videoRef.current.play().catch(e => console.warn('Second play attempt failed:', e));
           }
         }, 3000);
+
+        // 5초 후 최종 시도
+        setTimeout(() => {
+          if (videoRef.current) {
+            console.log('Final attempt to fix video attributes');
+            // 모든 속성을 강제로 재설정
+            videoRef.current.setAttribute('playsinline', 'true');
+            videoRef.current.setAttribute('webkit-playsinline', 'true');
+            videoRef.current.setAttribute('muted', 'true');
+            videoRef.current.setAttribute('autoplay', 'true');
+            videoRef.current.setAttribute('controls', 'false');
+            
+            videoRef.current.muted = true;
+            videoRef.current.playsInline = true;
+            videoRef.current.autoplay = true;
+            videoRef.current.controls = false;
+            
+            console.log('Final video properties:', {
+              muted: videoRef.current.muted,
+              playsInline: videoRef.current.playsInline,
+              controls: videoRef.current.controls,
+              autoplay: videoRef.current.autoplay
+            });
+            
+            if (videoRef.current.paused) {
+              videoRef.current.play().catch(e => console.warn('Final play attempt failed:', e));
+            }
+          }
+        }, 5000);
       } else {
         console.error('Video ref is null');
       }
@@ -677,8 +721,20 @@ export default function ReturnPage() {
                       videoRef.current.setAttribute('playsinline', 'true');
                       videoRef.current.setAttribute('webkit-playsinline', 'true');
                       videoRef.current.setAttribute('muted', 'true');
+                      videoRef.current.setAttribute('autoplay', 'true');
+                      videoRef.current.setAttribute('controls', 'false');
+                      
                       videoRef.current.muted = true;
                       videoRef.current.playsInline = true;
+                      videoRef.current.autoplay = true;
+                      videoRef.current.controls = false;
+                      
+                      console.log('Metadata loaded - video properties:', {
+                        muted: videoRef.current.muted,
+                        playsInline: videoRef.current.playsInline,
+                        controls: videoRef.current.controls,
+                        autoplay: videoRef.current.autoplay
+                      });
                     }
                   }}
                 />

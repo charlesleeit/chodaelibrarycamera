@@ -22,7 +22,7 @@ import Image from 'next/image';
 type SortField = 'barcode' | 'name' | 'author' | 'category' | 'book_type' | 'isbn' | 'publish' | 'publishyear' | 'authorcode' | 'id' | 'status' | 'oldcategory';
 type SortOrder = 'asc' | 'desc';
 
-// BookInfoModal: 외부 API로 책 정보 fetch 후 모달로 표시
+// BookInfoModal: Google Books API로 책 정보 fetch 후 모달로 표시
 function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boolean, onClose: () => void }) {
   const [book, setBook] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -33,16 +33,16 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
       setLoading(true);
       setError('');
       setBook(null);
-      fetch(`/api/barcode?isbn=${isbn}`)
+      fetch(`/api/google-books?isbn=${isbn}`)
         .then(res => res.json())
         .then(data => {
-          if (data.products && data.products.length > 0) {
-            setBook(data.products[0]);
+          if (data.success && data.book) {
+            setBook(data.book);
           } else {
-            setError('책 정보를 찾을 수 없습니다.');
+            setError(data.message || '책 정보를 찾을 수 없습니다.');
           }
         })
-        .catch(() => setError('API 호출 실패'))
+        .catch(() => setError('Google Books API 호출 실패'))
         .finally(() => setLoading(false));
     }
   }, [isbn, open]);
@@ -50,7 +50,7 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
   if (!open) return null;
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'white', padding: 24, borderRadius: 8, minWidth: 320, maxWidth: 400, position: 'relative' }}>
+      <div style={{ background: 'white', padding: 24, borderRadius: 8, minWidth: 400, maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 8, right: 8, fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center' }}>로딩중...</div>
@@ -58,9 +58,9 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
           <div style={{ color: 'red', padding: 20 }}>{error}</div>
         ) : book ? (
           <div>
-            {book.images && book.images[0] && (
+            {book.imageLinks?.thumbnail && (
               <Image
-                src={book.images[0]}
+                src={book.imageLinks.thumbnail}
                 alt={book.title}
                 width={180}
                 height={240}
@@ -68,14 +68,55 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
               />
             )}
             <h2 style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8 }}>{book.title}</h2>
-            <div style={{ marginBottom: 4 }}><b>저자:</b> {book.contributors?.find((c:any) => c.role === 'author')?.name}</div>
-            <div style={{ marginBottom: 4 }}><b>출판사:</b> {book.manufacturer}</div>
-            <div style={{ marginBottom: 4 }}><b>ISBN:</b> {book.barcode_number}</div>
-            <div style={{ marginBottom: 4 }}><b>카테고리:</b> {book.category}</div>
-            <div style={{ marginBottom: 8 }}><b>설명:</b> {book.description}</div>
-            {book.stores && book.stores[0] && (
-              <a href={book.stores[0].link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>구매처 바로가기</a>
+            <div style={{ marginBottom: 4 }}><b>저자:</b> {book.authors?.join(', ') || 'Unknown'}</div>
+            <div style={{ marginBottom: 4 }}><b>출판사:</b> {book.publisher}</div>
+            <div style={{ marginBottom: 4 }}><b>출판일:</b> {book.publishedDate}</div>
+            <div style={{ marginBottom: 4 }}><b>ISBN:</b> {book.isbn}</div>
+            <div style={{ marginBottom: 4 }}><b>페이지:</b> {book.pageCount} pages</div>
+            <div style={{ marginBottom: 4 }}><b>언어:</b> {book.language}</div>
+            {book.categories && book.categories.length > 0 && (
+              <div style={{ marginBottom: 4 }}><b>카테고리:</b> {book.categories.join(', ')}</div>
             )}
+            {book.averageRating > 0 && (
+              <div style={{ marginBottom: 4 }}><b>평점:</b> ⭐ {book.averageRating}/5 ({book.ratingsCount} reviews)</div>
+            )}
+            <div style={{ marginBottom: 8 }}><b>설명:</b> {book.description}</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              {book.previewLink && (
+                <a 
+                  href={book.previewLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ 
+                    color: '#2563eb', 
+                    textDecoration: 'underline',
+                    fontSize: '14px',
+                    padding: '4px 8px',
+                    border: '1px solid #2563eb',
+                    borderRadius: '4px'
+                  }}
+                >
+                  미리보기
+                </a>
+              )}
+              {book.infoLink && (
+                <a 
+                  href={book.infoLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ 
+                    color: '#059669', 
+                    textDecoration: 'underline',
+                    fontSize: '14px',
+                    padding: '4px 8px',
+                    border: '1px solid #059669',
+                    borderRadius: '4px'
+                  }}
+                >
+                  Google Books에서 보기
+                </a>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{ padding: 20 }}>책 정보 없음</div>
