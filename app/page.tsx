@@ -1,149 +1,18 @@
 'use client';
 
-import { FaBook, FaBookOpen, FaUsers, FaChartLine, FaFacebookF, FaTwitter, FaLinkedinIn, FaGooglePlusG } from 'react-icons/fa';
-
 export default function Home() {
   return (
-    <div className="space-y-8">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
-        <div className="relative z-10">
-          <p className="text-blue-100 text-lg">Your digital library management system</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* 도서관 배경 이미지 */}
+      <div className="absolute inset-0 z-0">
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 1200 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f8fafc;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23e2e8f0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grad1)' /%3E%3C!-- 도서관 책장 패턴 --%3E%3Cg fill='%23cbd5e1' opacity='0.3'%3E%3Crect x='50' y='100' width='80' height='600' rx='4' /%3E%3Crect x='150' y='80' width='80' height='640' rx='4' /%3E%3Crect x='250' y='120' width='80' height='580' rx='4' /%3E%3Crect x='350' y='90' width='80' height='620' rx='4' /%3E%3Crect x='450' y='110' width='80' height='600' rx='4' /%3E%3Crect x='550' y='85' width='80' height='630' rx='4' /%3E%3Crect x='650' y='105' width='80' height='610' rx='4' /%3E%3Crect x='750' y='95' width='80' height='620' rx='4' /%3E%3Crect x='850' y='115' width='80' height='590' rx='4' /%3E%3Crect x='950' y='100' width='80' height='610' rx='4' /%3E%3Crect x='1050' y='90' width='80' height='630' rx='4' /%3E%3C/g%3E%3C!-- 책들 --%3E%3Cg fill='%23a78bfa' opacity='0.4'%3E%3Crect x='60' y='200' width='60' height='400' rx='2' /%3E%3Crect x='160' y='180' width='60' height='420' rx='2' /%3E%3Crect x='260' y='220' width='60' height='380' rx='2' /%3E%3Crect x='360' y='190' width='60' height='410' rx='2' /%3E%3Crect x='460' y='210' width='60' height='390' rx='2' /%3E%3Crect x='560' y='185' width='60' height='415' rx='2' /%3E%3Crect x='660' y='205' width='60' height='395' rx='2' /%3E%3Crect x='760' y='195' width='60' height='405' rx='2' /%3E%3Crect x='860' y='215' width='60' height='385' rx='2' /%3E%3Crect x='960' y='200' width='60' height='400' rx='2' /%3E%3Crect x='1060' y='190' width='60' height='410' rx='2' /%3E%3C/g%3E%3C!-- 책들 2 --%3E%3Cg fill='%236366f1' opacity='0.3'%3E%3Crect x='70' y='300' width='50' height='300' rx='2' /%3E%3Crect x='170' y='280' width='50' height='320' rx='2' /%3E%3Crect x='270' y='320' width='50' height='280' rx='2' /%3E%3Crect x='370' y='290' width='50' height='310' rx='2' /%3E%3Crect x='470' y='310' width='50' height='290' rx='2' /%3E%3Crect x='570' y='285' width='50' height='315' rx='2' /%3E%3Crect x='670' y='305' width='50' height='295' rx='2' /%3E%3Crect x='770' y='295' width='50' height='305' rx='2' /%3E%3Crect x='870' y='315' width='50' height='285' rx='2' /%3E%3Crect x='970' y='300' width='50' height='300' rx='2' /%3E%3Crect x='1070' y='290' width='50' height='310' rx='2' /%3E%3C/g%3E%3C!-- 책들 3 --%3E%3Cg fill='%23ec4899' opacity='0.2'%3E%3Crect x='80' y='400' width='40' height='200' rx='2' /%3E%3Crect x='180' y='380' width='40' height='220' rx='2' /%3E%3Crect x='280' y='420' width='40' height='180' rx='2' /%3E%3Crect x='380' y='390' width='40' height='210' rx='2' /%3E%3Crect x='480' y='410' width='40' height='190' rx='2' /%3E%3Crect x='580' y='385' width='40' height='215' rx='2' /%3E%3Crect x='680' y='405' width='40' height='195' rx='2' /%3E%3Crect x='780' y='395' width='40' height='205' rx='2' /%3E%3Crect x='880' y='415' width='40' height='185' rx='2' /%3E%3Crect x='980' y='400' width='40' height='200' rx='2' /%3E%3Crect x='1080' y='390' width='40' height='210' rx='2' /%3E%3C/g%3E%3C!-- 책들 4 --%3E%3Cg fill='%23f59e0b' opacity='0.25'%3E%3Crect x='90' y='500' width='30' height='100' rx='2' /%3E%3Crect x='190' y='480' width='30' height='120' rx='2' /%3E%3Crect x='290' y='520' width='30' height='80' rx='2' /%3E%3Crect x='390' y='490' width='30' height='110' rx='2' /%3E%3Crect x='490' y='510' width='30' height='90' rx='2' /%3E%3Crect x='590' y='485' width='30' height='115' rx='2' /%3E%3Crect x='690' y='505' width='30' height='95' rx='2' /%3E%3Crect x='790' y='495' width='30' height='105' rx='2' /%3E%3Crect x='890' y='515' width='30' height='85' rx='2' /%3E%3Crect x='990' y='500' width='30' height='100' rx='2' /%3E%3Crect x='1090' y='490' width='30' height='110' rx='2' /%3E%3C/g%3E%3C!-- 책들 5 --%3E%3Cg fill='%2310b981' opacity='0.2'%3E%3Crect x='100' y='550' width='20' height='50' rx='2' /%3E%3Crect x='200' y='530' width='20' height='70' rx='2' /%3E%3Crect x='300' y='570' width='20' height='30' rx='2' /%3E%3Crect x='400' y='540' width='20' height='60' rx='2' /%3E%3Crect x='500' y='560' width='20' height='40' rx='2' /%3E%3Crect x='600' y='535' width='20' height='65' rx='2' /%3E%3Crect x='700' y='555' width='20' height='45' rx='2' /%3E%3Crect x='800' y='545' width='20' height='55' rx='2' /%3E%3Crect x='900' y='565' width='20' height='35' rx='2' /%3E%3Crect x='1000' y='550' width='20' height='50' rx='2' /%3E%3Crect x='1100' y='540' width='20' height='60' rx='2' /%3E%3C/g%3E%3C/svg%3E")`
+          }}
+        />
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold">2,847</p>
-              <p className="text-orange-100 font-medium">Total Books</p>
-            </div>
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <FaBook className="text-white text-2xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold">156</p>
-              <p className="text-blue-100 font-medium">Active Loans</p>
-            </div>
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <FaBookOpen className="text-white text-2xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold">1,805</p>
-              <p className="text-green-100 font-medium">Available Books</p>
-            </div>
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <FaChartLine className="text-white text-2xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold">89</p>
-              <p className="text-purple-100 font-medium">New Members</p>
-            </div>
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <FaUsers className="text-white text-2xl" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <button 
-            onClick={() => window.location.href = '/takeout'} 
-            className="group p-6 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl text-left transition-all duration-300 transform hover:scale-105 border border-blue-200"
-          >
-            <div className="flex items-center mb-3">
-              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-600 transition-colors">
-                <FaBookOpen className="text-white text-xl" />
-              </div>
-              <div className="text-blue-700 font-semibold text-lg">Borrow Book</div>
-            </div>
-            <div className="text-blue-600 text-sm">Check out a book from the library</div>
-          </button>
-
-          <button 
-            onClick={() => window.location.href = '/return'} 
-            className="group p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl text-left transition-all duration-300 transform hover:scale-105 border border-green-200"
-          >
-            <div className="flex items-center mb-3">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:bg-green-600 transition-colors">
-                <FaBook className="text-white text-xl" />
-              </div>
-              <div className="text-green-700 font-semibold text-lg">Return Book</div>
-            </div>
-            <div className="text-green-600 text-sm">Return a borrowed book</div>
-          </button>
-
-          <button 
-            onClick={() => window.location.href = '/books'} 
-            className="group p-6 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl text-left transition-all duration-300 transform hover:scale-105 border border-purple-200"
-          >
-            <div className="flex items-center mb-3">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4 group-hover:bg-purple-600 transition-colors">
-                <FaChartLine className="text-white text-xl" />
-              </div>
-              <div className="text-purple-700 font-semibold text-lg">Browse Books</div>
-            </div>
-            <div className="text-purple-600 text-sm">Search and view all books</div>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h3>
-        <div className="space-y-4">
-          <div className="flex items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-              <FaBook className="text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">New book added: "The Great Gatsby"</p>
-              <p className="text-sm text-gray-500">2 hours ago</p>
-            </div>
-          </div>
-          <div className="flex items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
-              <FaUsers className="text-green-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">New member registered: John Smith</p>
-              <p className="text-sm text-gray-500">4 hours ago</p>
-            </div>
-          </div>
-          <div className="flex items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-4">
-              <FaBookOpen className="text-orange-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">Book returned: "To Kill a Mockingbird"</p>
-              <p className="text-sm text-gray-500">6 hours ago</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

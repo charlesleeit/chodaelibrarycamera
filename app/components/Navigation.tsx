@@ -53,7 +53,7 @@ const Navigation = () => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/', icon: FaHome, hasSubmenu: false },
+    { name: 'Home', path: '/', icon: FaHome, hasSubmenu: false },
     { name: 'Books', path: '/books', icon: FaBook, hasSubmenu: false },
     { name: 'Take Out', path: '/takeout', icon: FaBookDead, hasSubmenu: false },
     { name: 'Return', path: '/return', icon: FaExchangeAlt, hasSubmenu: false },
@@ -65,13 +65,10 @@ const Navigation = () => {
       children: [
         { name: '대출 현황', path: '/loanstatus' },
         { name: 'TOP LIST', path: '/reports/toplist' },
-        { name: '반납 현황', path: '/reports/return' },
-        { name: '카테고리 업데이트', path: '/reports/category-update' },
       ],
       requiresAuth: true,
     },
     { name: 'Users', path: '/users', icon: FaUsers, hasSubmenu: false, requiresAuth: true },
-    { name: 'Settings', path: '/settings', icon: FaCog, hasSubmenu: false },
   ];
 
   // 모바일 햄버거 버튼
@@ -105,10 +102,10 @@ const Navigation = () => {
                 <Image
                   src="/njchodae-logo.png"
                   alt="NJCHODAE"
-                  width={24}
-                  height={24}
+                  width={100}
+                  height={100}
                   priority
-                  className="h-8 w-auto"
+                  className="rounded-lg w-full max-w-none"
                   unoptimized
                 />
               </div>
@@ -239,10 +236,15 @@ const Navigation = () => {
         {/* Logo Section */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
-            {!isSidebarCollapsed && <span className="text-xl font-bold text-white">Pluto</span>}
+            <Image
+              src="/njchodae-logo.png"
+              alt="NJCHODAE"
+              width={isSidebarCollapsed ? 32 : 120}
+              height={isSidebarCollapsed ? 32 : 120}
+              priority
+              className="rounded-lg w-full max-w-none"
+              unoptimized
+            />
           </div>
           <button
             onClick={toggleSidebar}
@@ -323,6 +325,25 @@ const Navigation = () => {
                                 pathname === child.path
                                   ? 'bg-blue-500/20 text-blue-300'
                                   : 'hover:bg-slate-600/30 hover:text-white text-slate-400'
+                              }`}
+                            >
+                              {child.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {/* 접힌 상태에서 하위 메뉴 표시 */}
+                    {isSidebarCollapsed && reportOpen && (
+                      <ul className="absolute left-16 bg-slate-700 rounded-lg shadow-xl py-2 z-50 min-w-48">
+                        {item.children.map((child) => (
+                          <li key={child.path}>
+                            <Link
+                              href={child.path as any}
+                              className={`block px-4 py-2 text-sm transition-colors ${
+                                pathname === child.path
+                                  ? 'bg-blue-500/20 text-blue-300'
+                                  : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
                               }`}
                             >
                               {child.name}

@@ -14,133 +14,16 @@ export default function ReturnPage() {
   const [returnError, setReturnError] = useState('');
   const [bookInfo, setBookInfo] = useState<BookInfo | null>(null);
   const [returnSuccess, setReturnSuccess] = useState(false);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const captureCanvasRef = useRef<HTMLCanvasElement>(null);
+  const bookReturnInputRef = useRef<HTMLInputElement>(null);
 
-  // 컴포넌트 언마운트 시 카메라 정리
+  // Book Return 입력 필드에 기본 포커스 설정
   useEffect(() => {
-    return () => {
-      stopCamera();
-    };
+    if (bookReturnInputRef.current) {
+      bookReturnInputRef.current.focus();
+    }
   }, []);
 
-  // 카메라 시작 - 더 간단한 방법
-  const startCamera = async () => {
-    try {
-      setCameraError('');
-      
-      // 가장 기본적인 방법으로 시도
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment' 
-        } 
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-        setIsCameraOpen(true);
-      }
-    } catch (error) {
-      console.error('Camera error:', error);
-      setCameraError('카메라를 사용할 수 없습니다. 바코드를 직접 입력해주세요.');
-    }
-  };
-
-  // 카메라 중지
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCameraOpen(false);
-    setCapturedImage(null);
-  };
-
-  // 사진 촬영
-  const capturePhoto = () => {
-    if (!videoRef.current || !captureCanvasRef.current) return;
-
-    const video = videoRef.current;
-    const canvas = captureCanvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    const imageData = canvas.toDataURL('image/png');
-    setCapturedImage(imageData);
-  };
-
-  // 촬영된 사진에서 바코드 스캔
-  const scanCapturedImage = async () => {
-    if (!capturedImage || !canvasRef.current) return;
-
-    const img = new Image();
-    img.onload = async () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-        
-      try {
-        const { BrowserMultiFormatReader, NotFoundException } = await import('@zxing/library');
-        const reader = new BrowserMultiFormatReader();
-        
-        // Canvas에서 이미지 데이터를 가져와서 스캔
-        const imageData = canvas.toDataURL('image/png');
-        const img = new Image();
-        img.onload = async () => {
-          try {
-            const result = await reader.decodeFromImageElement(img);
-            if (result) {
-              const barcode = result.getText();
-              setReturnBookId(barcode);
-              setCameraError('');
-              setCapturedImage(null);
-              
-              // 자동으로 반납 처리
-              setTimeout(async () => {
-                await handleBookReturn();
-              }, 500);
-            }
-          } catch (error) {
-            if (error instanceof NotFoundException) {
-              setCameraError('촬영된 사진에서 바코드를 찾을 수 없습니다. 다시 촬영해주세요.');
-            } else {
-              console.error('Barcode scan error:', error);
-              setCameraError('바코드 스캔 중 오류가 발생했습니다.');
-            }
-          }
-        };
-        img.src = imageData;
-      } catch (error) {
-        console.error('Barcode scan error:', error);
-        setCameraError('바코드 스캔 중 오류가 발생했습니다.');
-      }
-    };
-    img.src = capturedImage;
-  };
-
-  // 사진 다시 촬영
-  const retakePhoto = () => {
-    setCapturedImage(null);
-    startCamera();
-  };
 
   const fetchBookInfo = async (barcode: string) => {
     const res = await fetch(`/api/bookcrud/scan?barcode=${encodeURIComponent(barcode)}`);
@@ -203,150 +86,47 @@ export default function ReturnPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Book Return</h1>
         
         <div className="space-y-4">
-          {/* 바코드 스캔 버튼 */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isCameraOpen) {
-                  stopCamera();
-                } else {
-                  startCamera();
-                }
-              }}
-              className={`px-8 py-4 rounded-lg text-white font-medium transition-colors text-lg ${
-                isCameraOpen 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-blue-600 hover:bg-blue-700'
-              } ${loadingReturn ? 'opacity-60 cursor-not-allowed' : ''}`}
+          {/* 바코드 입력 필드 */}
+          <div>
+            <label htmlFor="book-return" className="block text-sm font-semibold text-gray-700 mb-2">
+              Book Barcode
+            </label>
+            <input
+              type="text"
+              id="book-return"
+              value={returnBookId}
+              onChange={e => setReturnBookId(e.target.value)}
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg ${
+                loadingReturn ? 'opacity-60' : ''
+              }`}
+              placeholder="Enter Book Barcode to return"
+              onKeyDown={e => { if (e.key === 'Enter') handleBookReturn(); }}
+              ref={bookReturnInputRef}
               disabled={loadingReturn}
-              title={isCameraOpen ? 'Stop Camera' : 'Start Camera'}
-              style={{ 
-                WebkitTouchCallout: 'none',
-                WebkitUserSelect: 'none',
-                userSelect: 'none'
-              }}
-            >
-              {loadingReturn ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                  </svg>
-                  처리 중...
-                </>
-              ) : isCameraOpen ? '⏹️ 카메라 중지' : '📷 바코드 스캔'}
-            </button>
-            <p className="text-sm text-gray-600 mt-2">
-              {loadingReturn ? '도서 반납 처리 중...' : isCameraOpen ? '바코드를 카메라에 비춰주세요' : '바코드를 스캔하려면 버튼을 클릭하세요'}
-            </p>
+            />
           </div>
 
-          {/* Camera Error */}
-          {cameraError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              {cameraError}
-              <div className="mt-2 text-xs">
-                <strong>해결 방법:</strong>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>브라우저 주소창의 카메라 아이콘을 클릭하여 권한 허용</li>
-                  <li>Chrome, Firefox, Safari 최신 버전 사용</li>
-                  <li>HTTPS 또는 localhost에서 실행</li>
-                  <li>다른 앱에서 카메라 사용 중이면 종료</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Camera Preview */}
-          {isCameraOpen && !capturedImage && (
-            <div className="space-y-3">
-              <div className="relative">
-                <video
-                  ref={videoRef}
-                  className="w-full h-64 bg-black rounded-md border-2 border-blue-400"
-                  playsInline
-                  webkit-playsinline="true"
-                  muted
-                  autoPlay
-                  controls={false}
-                  style={{ 
-                    objectFit: 'cover',
-                    width: '100%',
-                    height: '100%'
-                  }}
-                />
-                <div className="absolute inset-0 border-2 border-dashed border-blue-400 rounded-md pointer-events-none opacity-50"></div>
-                <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
-                  <div>카메라 상태: {isCameraOpen ? '활성' : '비활성'}</div>
-                  <div>비디오 크기: {videoRef.current?.videoWidth || 0}x{videoRef.current?.videoHeight || 0}</div>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 justify-center">
-                <button
-                  type="button"
-                  onClick={capturePhoto}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
-                >
-                  📸 사진 촬영
-                </button>
-                <button
-                  type="button"
-                  onClick={stopCamera}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Captured Photo Preview */}
-          {capturedImage && (
-            <div className="space-y-3">
-              <div className="relative">
-                <img
-                  src={capturedImage}
-                  alt="Captured barcode"
-                  className="w-full h-64 bg-black rounded-md border-2 border-green-400 object-cover"
-                />
-                <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
-                  <div>촬영된 사진</div>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 justify-center">
-                <button
-                  type="button"
-                  onClick={scanCapturedImage}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-                >
-                  🔍 바코드 스캔
-                </button>
-                <button
-                  type="button"
-                  onClick={retakePhoto}
-                  className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 font-medium"
-                >
-                  📷 다시 촬영
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCapturedImage(null)}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Hidden Canvas for Barcode Detection */}
-          <canvas ref={canvasRef} style={{ display: 'none' }} />
-          <canvas ref={captureCanvasRef} style={{ display: 'none' }} />
+          {/* 반납 버튼 */}
+          <button
+            type="button"
+            className={`w-full flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium text-lg ${
+              loadingReturn ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+            onClick={handleBookReturn}
+            disabled={loadingReturn}
+          >
+            {loadingReturn ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              'Return Book'
+            )}
+          </button>
 
           {/* Book Info/Result Box */}
           {(bookInfo || returnError) && (
