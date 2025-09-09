@@ -13,11 +13,21 @@ export default function LoginPage() {
   const { login } = useAuth();
   const idInputRef = useRef<HTMLInputElement>(null);
 
-  // ID 입력 필드에 기본 포커스 설정
+  // ID 입력 필드에 기본 포커스 설정 및 스크롤 차단
   useEffect(() => {
     if (idInputRef.current) {
       idInputRef.current.focus();
     }
+    
+    // 스크롤 차단
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    
+    // 컴포넌트 언마운트 시 스크롤 복원
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = 'unset';
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,8 +55,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md">
+    <div className="login-form-container bg-gray-50 overflow-hidden no-scroll">
+      <div className="w-full max-w-md mx-auto">
         <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-white/20 flex flex-col items-center gap-6">
           {/* Header Section */}
           <div className="flex flex-col items-center mb-4">

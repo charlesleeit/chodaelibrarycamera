@@ -344,7 +344,7 @@ export default function TakeoutPage() {
 
   if (showConfirmation) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="w-full flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">Member Verification</h1>
           
@@ -414,7 +414,7 @@ export default function TakeoutPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="w-full flex items-center justify-center p-4">
       <div className="w-full max-w-6xl">
         <div className="mb-6">
           <div className="flex justify-between items-start mb-4">

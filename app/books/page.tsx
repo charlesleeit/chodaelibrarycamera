@@ -49,30 +49,120 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
 
   if (!open) return null;
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+    <>
+      <style jsx>{`
+        .book-modal {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+        }
+        .book-modal > div {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+        }
+        .book-modal * {
+          color: #1a1a1a !important;
+        }
+        .book-modal h1, .book-modal h2, .book-modal h3, .book-modal h4, .book-modal h5, .book-modal h6 {
+          color: #1a1a1a !important;
+        }
+        .book-modal p, .book-modal span, .book-modal div {
+          color: #1a1a1a !important;
+        }
+        .book-modal b, .book-modal strong {
+          color: #1a1a1a !important;
+        }
+        .book-modal .text-gray-600 {
+          color: #666 !important;
+        }
+        .book-modal .text-gray-500 {
+          color: #999 !important;
+        }
+      `}</style>
       <div style={{ 
-        background: 'white', 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        width: '100vw', 
+        height: '100vh', 
+        background: 'rgba(0,0,0,0.5)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        zIndex: 1000,
+        padding: '20px'
+      }}>
+      <div className="book-modal" style={{ 
+        background: '#ffffff',
+        backgroundColor: '#ffffff',
         padding: 24, 
-        borderRadius: 8, 
+        borderRadius: 12, 
         width: '500px', 
+        maxWidth: '90vw',
         height: '600px', 
+        maxHeight: '90vh',
         overflowY: 'auto', 
         position: 'relative',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        border: '1px solid rgba(0, 0, 0, 0.1)',
+        colorScheme: 'light'
       }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 8, right: 8, fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+        <button 
+          onClick={onClose} 
+          style={{ 
+            position: 'absolute', 
+            top: 12, 
+            right: 12, 
+            width: '32px',
+            height: '32px',
+            fontSize: '16px', 
+            fontWeight: 'bold',
+            background: '#f8f9fa', 
+            border: '2px solid #dee2e6',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6c757d',
+            transition: 'all 0.2s ease',
+            zIndex: 10,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#dc3545';
+            e.currentTarget.style.borderColor = '#dc3545';
+            e.currentTarget.style.color = 'white';
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#f8f9fa';
+            e.currentTarget.style.borderColor = '#dee2e6';
+            e.currentTarget.style.color = '#6c757d';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          title="닫기"
+        >
+          ✕
+        </button>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center' }}>로딩중...</div>
+          <div style={{ padding: 40, textAlign: 'center', color: '#1a1a1a !important' }}>로딩중...</div>
         ) : error ? (
-          <div style={{ color: 'red', padding: 20 }}>{error}</div>
+          <div style={{ color: 'red !important', padding: 20 }}>{error}</div>
         ) : book ? (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column',
+            color: '#1a1a1a !important',
+            background: '#ffffff',
+            backgroundColor: '#ffffff'
+          }}>
             {/* 책 표지와 기본 정보 */}
             <div style={{ display: 'flex', marginBottom: 16, gap: 16 }}>
-              {book.imageLinks?.thumbnail && (
+              {(book.imageLinks?.thumbnail || book.imageLinks?.small || book.imageLinks?.medium) && (
                 <div style={{ flexShrink: 0 }}>
                   <Image
-                    src={book.imageLinks.thumbnail}
+                    src={book.imageLinks.thumbnail || book.imageLinks.small || book.imageLinks.medium}
                     alt={book.title}
                     width={120}
                     height={160}
@@ -83,7 +173,35 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                       borderRadius: '4px',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}
+                    onError={(e) => {
+                      console.log('Image load error:', e);
+                      // 이미지 로드 실패 시 다음 크기 시도
+                      const target = e.target as HTMLImageElement;
+                      if (book.imageLinks?.small && target.src !== book.imageLinks.small) {
+                        target.src = book.imageLinks.small;
+                      } else if (book.imageLinks?.medium && target.src !== book.imageLinks.medium) {
+                        target.src = book.imageLinks.medium;
+                      }
+                    }}
                   />
+                </div>
+              )}
+              {!(book.imageLinks?.thumbnail || book.imageLinks?.small || book.imageLinks?.medium) && (
+                <div style={{ 
+                  flexShrink: 0, 
+                  width: '120px', 
+                  height: '160px', 
+                  backgroundColor: '#f3f4f6', 
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#6b7280',
+                  fontSize: '12px',
+                  textAlign: 'center',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}>
+                  이미지 없음
                 </div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -96,22 +214,24 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                   textOverflow: 'ellipsis',
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical'
+                  WebkitBoxOrient: 'vertical',
+                  color: '#1a1a1a !important',
+                  WebkitTextFillColor: '#1a1a1a !important'
                 }}>
                   {book.title}
                 </h2>
-                <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                  <div style={{ marginBottom: 3 }}><b>저자:</b> <span style={{ color: '#666' }}>{book.authors?.join(', ') || 'Unknown'}</span></div>
-                  <div style={{ marginBottom: 3 }}><b>출판사:</b> <span style={{ color: '#666' }}>{book.publisher}</span></div>
-                  <div style={{ marginBottom: 3 }}><b>출판일:</b> <span style={{ color: '#666' }}>{book.publishedDate}</span></div>
-                  <div style={{ marginBottom: 3 }}><b>ISBN:</b> <span style={{ color: '#666' }}>{book.isbn}</span></div>
-                  <div style={{ marginBottom: 3 }}><b>페이지:</b> <span style={{ color: '#666' }}>{book.pageCount} pages</span></div>
-                  <div style={{ marginBottom: 3 }}><b>언어:</b> <span style={{ color: '#666' }}>{book.language}</span></div>
+                <div style={{ fontSize: '14px', lineHeight: '1.4', color: '#1a1a1a !important' }}>
+                  <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>저자:</b> <span style={{ color: '#666 !important' }}>{book.authors?.join(', ') || 'Unknown'}</span></div>
+                  <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>출판사:</b> <span style={{ color: '#666 !important' }}>{book.publisher}</span></div>
+                  <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>출판일:</b> <span style={{ color: '#666 !important' }}>{book.publishedDate}</span></div>
+                  <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>ISBN:</b> <span style={{ color: '#666 !important' }}>{book.isbn}</span></div>
+                  <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>페이지:</b> <span style={{ color: '#666 !important' }}>{book.pageCount} pages</span></div>
+                  <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>언어:</b> <span style={{ color: '#666 !important' }}>{book.language}</span></div>
                   {book.categories && book.categories.length > 0 && (
-                    <div style={{ marginBottom: 3 }}><b>카테고리:</b> <span style={{ color: '#666' }}>{book.categories.join(', ')}</span></div>
+                    <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>카테고리:</b> <span style={{ color: '#666 !important' }}>{book.categories.join(', ')}</span></div>
                   )}
                   {book.averageRating > 0 && (
-                    <div style={{ marginBottom: 3 }}><b>평점:</b> <span style={{ color: '#666' }}>⭐ {book.averageRating}/5 ({book.ratingsCount} reviews)</span></div>
+                    <div style={{ marginBottom: 3, color: '#1a1a1a !important' }}><b style={{ color: '#1a1a1a !important' }}>평점:</b> <span style={{ color: '#666 !important' }}>⭐ {book.averageRating}/5 ({book.ratingsCount} reviews)</span></div>
                   )}
                 </div>
               </div>
@@ -119,11 +239,11 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
             
             {/* 설명 */}
             <div style={{ flex: 1, marginBottom: 16 }}>
-              <h3 style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>설명</h3>
+              <h3 style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8, color: '#1a1a1a !important' }}>설명</h3>
               <div style={{ 
                 fontSize: '14px', 
                 lineHeight: '1.5', 
-                color: '#666',
+                color: '#666 !important',
                 maxHeight: '120px',
                 overflowY: 'auto',
                 padding: '8px',
@@ -131,7 +251,20 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                 borderRadius: '4px',
                 border: '1px solid #e9ecef'
               }}>
-                {book.description || '설명이 없습니다.'}
+                {book.description && book.description !== 'No description available' ? (
+                  <span style={{ color: '#666 !important' }}>{book.description}</span>
+                ) : (
+                  <div style={{ 
+                    color: '#999 !important', 
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    padding: '20px 0'
+                  }}>
+                    📚 이 책에 대한 상세한 설명이 Google Books에서 제공되지 않습니다.
+                    <br />
+                    <small style={{ color: '#999 !important' }}>미리보기나 Google Books 링크를 통해 더 자세한 정보를 확인해보세요.</small>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -143,7 +276,7 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                   target="_blank" 
                   rel="noopener noreferrer" 
                   style={{ 
-                    color: '#2563eb', 
+                    color: '#2563eb !important', 
                     textDecoration: 'none',
                     fontSize: '14px',
                     padding: '8px 16px',
@@ -172,7 +305,7 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
                   target="_blank" 
                   rel="noopener noreferrer" 
                   style={{ 
-                    color: '#059669', 
+                    color: '#059669 !important', 
                     textDecoration: 'none',
                     fontSize: '14px',
                     padding: '8px 16px',
@@ -198,10 +331,11 @@ function BookInfoModal({ isbn, open, onClose }: { isbn: string|null, open: boole
             </div>
           </div>
         ) : (
-          <div style={{ padding: 20 }}>책 정보 없음</div>
+          <div style={{ padding: 20, color: '#1a1a1a !important' }}>책 정보 없음</div>
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -346,22 +480,42 @@ export default function Books() {
   const currentItems = filteredBooks.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
 
-  // Fancy pagination logic
+  // Improved pagination logic
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
+    
     if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
     } else {
-      if (currentPage <= 4) {
-        pages.push(1, '...', 3, 4, 5, 6, '...', totalPages);
-      } else if (currentPage >= totalPages - 3) {
-        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        // Show 1, 2, 3, 4, 5, ..., last
+        pages.push(2, 3, 4, 5);
+        if (totalPages > 6) {
+          pages.push('...');
+        }
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Show 1, ..., last-4, last-3, last-2, last-1, last
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
       } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+        // Show 1, ..., current-1, current, current+1, ..., last
+        pages.push('...');
+        pages.push(currentPage - 1, currentPage, currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
       }
     }
-    // Remove duplicates and sort
-    return [...new Set(pages)].filter(p => p === '...' || (typeof p === 'number' && p >= 1 && p <= totalPages));
+    
+    return pages;
   };
 
   return (
@@ -477,24 +631,31 @@ export default function Books() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentItems.map((book, index) => (
-                  <tr key={book.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${book.status === 0 ? 'bg-gray-100 text-gray-500' : ''}`}>
+                {currentItems.map((book, index) => {
+                  // 배경색에 따라 글자색 결정
+                  const isEvenRow = index % 2 === 0;
+                  const isInactive = book.status === 0;
+                  const bgColor = isInactive ? 'bg-gray-100' : (isEvenRow ? 'bg-white' : 'bg-gray-50');
+                  const textColor = isInactive ? 'text-gray-500' : (isEvenRow ? 'text-gray-900' : 'text-gray-900');
+                  
+                  return (
+                    <tr key={book.id} className={`${bgColor} ${textColor}`}>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[200px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.name}>{book.name}</div>
+                      <div className={`max-w-[200px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={book.name}>{book.name}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.author}>{book.author}</div>
+                      <div className={`max-w-[150px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={book.author}>{book.author}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[120px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.barcode}>{book.barcode}</div>
+                      <div className={`max-w-[120px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={book.barcode}>{book.barcode}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.category ? `${book.category} - ${categories.find(cat => cat.code === book.category)?.description || ''}` : ''}>
+                      <div className={`max-w-[150px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={book.category ? `${book.category} - ${categories.find(cat => cat.code === book.category)?.description || ''}` : ''}>
                         {book.category ? (
                           <>
                             <span className="font-medium">{book.category}</span>
                             {categories.find(cat => cat.code === book.category)?.description && (
-                              <span className="text-gray-600 ml-1">- {categories.find(cat => cat.code === book.category)?.description}</span>
+                              <span className={`ml-1 ${isInactive ? 'text-gray-400' : 'text-gray-600'}`}>- {categories.find(cat => cat.code === book.category)?.description}</span>
                             )}
                           </>
                         ) : (
@@ -503,15 +664,15 @@ export default function Books() {
                       </div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.oldcategory}>{book.oldcategory}</div>
+                      <div className={`max-w-[100px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={book.oldcategory}>{book.oldcategory}</div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[150px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={`${book.book_type} - ${bookTypes.find(type => type.code === book.book_type)?.description || ''}`}>
+                      <div className={`max-w-[150px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={`${book.book_type} - ${bookTypes.find(type => type.code === book.book_type)?.description || ''}`}>
                         {book.book_type ? (
                           <>
                             <span className="font-medium">{book.book_type}</span>
                             {bookTypes.find(type => type.code === book.book_type)?.description && (
-                              <span className="text-gray-600 ml-1">- {bookTypes.find(type => type.code === book.book_type)?.description}</span>
+                              <span className={`ml-1 ${isInactive ? 'text-gray-400' : 'text-gray-600'}`}>- {bookTypes.find(type => type.code === book.book_type)?.description}</span>
                             )}
                           </>
                         ) : (
@@ -520,7 +681,7 @@ export default function Books() {
                       </div>
                     </td>
                     <td className="px-2 py-2 text-sm">
-                      <div className={`max-w-[100px] truncate ${book.status === 0 ? 'text-gray-400' : ''}`} title={book.authorcode}>{book.authorcode}</div>
+                      <div className={`max-w-[100px] truncate ${isInactive ? 'text-gray-400' : textColor}`} title={book.authorcode}>{book.authorcode}</div>
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm">
                       {book.status === 0 ? (
@@ -539,14 +700,14 @@ export default function Books() {
                       {book.status === 0 ? (
                         <span className="text-gray-400">{book.publish}</span>
                       ) : (
-                        book.publish
+                        <span className={textColor}>{book.publish}</span>
                       )}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm">
                       {book.status === 0 ? (
                         <span className="text-gray-400">{book.publishyear}</span>
                       ) : (
-                        book.publishyear
+                        <span className={textColor}>{book.publishyear}</span>
                       )}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm font-medium">
@@ -557,7 +718,8 @@ export default function Books() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -38,12 +38,29 @@ export async function GET(request: NextRequest) {
       authors: book.authors || ['Unknown Author'],
       publisher: book.publisher || 'Unknown Publisher',
       publishedDate: book.publishedDate || 'Unknown Date',
-      description: book.description || 'No description available',
+      description: (() => {
+        if (book.description && book.description.trim().length > 10) {
+          return book.description;
+        }
+        if (book.subtitle && book.subtitle.trim().length > 0) {
+          return `부제목: ${book.subtitle}`;
+        }
+        if (book.categories && book.categories.length > 0) {
+          return `카테고리: ${book.categories.join(', ')}`;
+        }
+        return 'No description available';
+      })(),
       isbn: isbn,
       pageCount: book.pageCount || 0,
       categories: book.categories || [],
       language: book.language || 'Unknown',
-      imageLinks: book.imageLinks || {},
+      imageLinks: book.imageLinks ? {
+        thumbnail: book.imageLinks.thumbnail || book.imageLinks.smallThumbnail || '',
+        small: book.imageLinks.small || book.imageLinks.smallThumbnail || '',
+        medium: book.imageLinks.medium || book.imageLinks.thumbnail || '',
+        large: book.imageLinks.large || book.imageLinks.medium || '',
+        extraLarge: book.imageLinks.extraLarge || book.imageLinks.large || ''
+      } : {},
       previewLink: book.previewLink || '',
       infoLink: book.infoLink || '',
       canonicalVolumeLink: book.canonicalVolumeLink || '',
@@ -51,6 +68,16 @@ export async function GET(request: NextRequest) {
       ratingsCount: book.ratingsCount || 0,
       maturityRating: book.maturityRating || 'NOT_MATURE'
     };
+    
+    console.log('Google Books API response:', {
+      title: transformedBook.title,
+      hasImageLinks: !!book.imageLinks,
+      imageLinks: book.imageLinks,
+      transformedImageLinks: transformedBook.imageLinks,
+      hasDescription: !!book.description,
+      description: book.description,
+      descriptionLength: book.description?.length || 0
+    });
     
     return NextResponse.json({ 
       success: true, 

@@ -225,8 +225,8 @@ const Navigation = () => {
 
   // 데스크톱 사이드바 - Fancy Design
   return (
-    <div className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-slate-800 via-slate-700 to-slate-800 text-white shadow-2xl transition-all duration-300 ${
-      isSidebarCollapsed ? 'w-16' : 'w-64'
+    <div className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-slate-800 via-slate-700 to-slate-800 text-white shadow-2xl transition-all duration-300 z-50 ${
+      isSidebarCollapsed ? 'w-16' : 'w-72'
     }`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">

@@ -1,0 +1,5 @@
+[33me514346[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Fix JSX syntax error in takeout page - missing closing div tags
+[33m8ca9745[m Center align takeout and login forms on screen
+[33m2e45004[m Fix navigation menu active state - Dashboard no longer always selected
+[33m801c0d9[m Fix Next.js dynamic server usage error in Google Books API
+[33m8cb58e5[m Fix book info popup to fixed size with improved layout
